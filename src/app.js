@@ -18,6 +18,7 @@ const author = (book) => (book.authors || []).map((person) => person.name).join(
 const cover = (book) => book.formats?.['image/jpeg'] || '';
 const esc = (value = '') => String(value).replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
 const remember = (books) => books.forEach((book) => library.set(String(book.id), book));
+const proxiedUrl = (url) => `https://r.jina.ai/${url}`;
 
 function booksUrl(query, pageSize = 24) {
   const params = new URLSearchParams({ page_size: pageSize });
@@ -54,8 +55,7 @@ async function textOf(book) {
   const url = (textUrl || htmlUrl || '').replace('http://', 'https://');
   if (!url) throw Error('No readable edition is available for this title.');
 
-  const response = await fetch(url);
-  if (!response.ok) throw Error('This book could not be opened right now.');
+  const response = await fetchBook(url);
   if (textUrl) {
     const text = await response.text();
     if (text.length > 400) return strip(text);
@@ -66,6 +66,23 @@ async function textOf(book) {
   const text = doc.body?.innerText || '';
   if (text.length > 400) return strip(text);
   throw Error('No readable edition is available for this title.');
+}
+
+async function fetchBook(url) {
+  const attempts = [url];
+  if (/^https:\/\/(?:www\.)?gutenberg\.org\//i.test(url)) attempts.push(proxiedUrl(url));
+
+  for (const attempt of attempts) {
+    try {
+      const response = await fetch(attempt);
+      if (response.ok) return response;
+    } catch {
+      // Some Project Gutenberg file hosts intermittently block browser CORS.
+      // Try the reader-friendly proxy fallback before showing the error.
+    }
+  }
+
+  throw Error('This book could not be opened right now. Please try again.');
 }
 
 function pages(text) {
