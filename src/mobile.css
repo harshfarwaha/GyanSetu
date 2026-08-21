@@ -1,16 +1,106 @@
 /* Mobile layout polish: keep desktop styles unchanged. */
 @media (max-width: 560px) {
-  main { padding: 18px 12px 44px; }
-  .shelf { margin-bottom: 14px; padding: 14px; border-radius: 22px; }
-  .sectionHead { margin-bottom: 10px; }
-  .sectionHead h2 { font-size: 25px; line-height: 1.05; }
-  .rule { margin-bottom: 12px; }
-  .rail { gap: 12px; padding: 2px 2px 8px; align-items: flex-start; }
-  .bookCard, .skeleton { width: 132px !important; min-width: 132px; flex: 0 0 132px !important; }
-  .bookCard { height: 286px; display: flex; flex-direction: column; }
-  .coverBtn { width: 132px; height: 198px; aspect-ratio: auto; flex: 0 0 198px; padding: 7px; border-radius: 12px; }
-  .coverBtn img { width: 100%; height: 100%; aspect-ratio: 2 / 3; object-fit: cover; }
-  .bookCard h3 { height: 38px; min-height: 38px; margin: 8px 0 3px; font-size: 15px; line-height: 1.08; }
-  .bookCard p { height: 16px; min-height: 16px; margin: 0 0 7px; font-size: 11px; }
-  .read { margin-top: auto; padding: 8px 6px; min-height: 34px; font-size: 12px; }
+  main { padding: 14px 10px 32px; }
+
+  .shelf {
+    margin-bottom: 12px;
+    padding: 13px;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .sectionHead { margin-bottom: 9px; }
+  .sectionHead h2 { font-size: 24px; line-height: 1.05; }
+  .rule { margin-bottom: 11px; }
+
+  .rail {
+    gap: 10px;
+    padding: 2px 1px 7px;
+    align-items: stretch;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .rail::-webkit-scrollbar { display: none; }
+
+  /* Every mobile book uses the same fixed width and height. */
+  .bookCard,
+  .skeleton {
+    width: 132px !important;
+    min-width: 132px;
+    max-width: 132px;
+    flex: 0 0 132px !important;
+    scroll-snap-align: start;
+  }
+
+  .bookCard {
+    height: 284px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .coverBtn {
+    width: 132px;
+    height: 198px;
+    aspect-ratio: auto;
+    flex: 0 0 198px;
+    padding: 6px;
+    border-radius: 11px;
+    overflow: hidden;
+  }
+
+  .coverBtn img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+  }
+
+  .bookCard h3 {
+    height: 36px;
+    min-height: 36px;
+    max-height: 36px;
+    margin: 7px 0 2px;
+    font-size: 14px;
+    line-height: 1.12;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .bookCard p {
+    height: 15px;
+    min-height: 15px;
+    max-height: 15px;
+    margin: 0 0 6px;
+    font-size: 10px;
+    line-height: 15px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .read {
+    width: 100%;
+    margin-top: auto;
+    padding: 8px 5px;
+    min-height: 33px;
+    font-size: 11px;
+    line-height: 17px;
+    border-radius: 9px;
+  }
+
+  /* Keep the category stack compact without making sections touch. */
+  .shelf + .shelf { margin-top: 0; }
+}
+
+/* Reader safety/polish: avoid accidental horizontal overflow on phones. */
+@media (max-width: 560px) {
+  body { overflow-x: hidden; }
 }
