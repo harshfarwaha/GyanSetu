@@ -73,10 +73,41 @@ const INDIAN_PDF_BOOKS = [
   },
 ];
 
+// All queries are scoped to mediatype:texts + format:pdf so only directly-openable
+// public-domain / openly-licensed PDF scans are ever surfaced (no plain-text-only items,
+// no catalogue-only listings that just link off-site).
 const DIRECT_PDF_SOURCES = [
   {
     name: 'Indian books mega library',
     query: 'collection:(opensource_indian_books OR digitallibraryindia) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Fiction & classics',
+    query: 'subject:(fiction OR classics OR literature OR novels) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Adventure',
+    query: 'subject:(adventure OR "adventure stories" OR exploration OR "sea stories") AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Mystery & detective',
+    query: 'subject:(mystery OR detective OR crime OR thriller OR "murder mystery") AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Romance & love stories',
+    query: 'subject:(romance OR "love stories" OR "romantic fiction") AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Science fiction & fantasy',
+    query: 'subject:("science fiction" OR fantasy OR "speculative fiction" OR utopias) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Poetry',
+    query: 'subject:(poetry OR poems OR verse) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Storybooks & children',
+    query: 'subject:("children\'s stories" OR "fairy tales" OR "juvenile fiction" OR "folk tales" OR nursery) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
   },
   {
     name: 'Encyclopedias & reference',
@@ -87,12 +118,13 @@ const DIRECT_PDF_SOURCES = [
     query: 'subject:(comics OR "comic books" OR "graphic novels") AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
   },
   {
-    name: 'Manga',
-    query: 'subject:manga AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
-  },
-  {
-    name: 'Fiction & classics',
-    query: 'subject:(fiction OR classics OR literature OR novels OR drama OR poetry) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    // Most manga is still in copyright (Japanese copyright runs decades past the
+    // author's death), so unlike the other shelves this query additionally requires
+    // an explicit public-domain / Creative-Commons license field on the item. That
+    // keeps this shelf legal even though it means fewer results than a bare
+    // subject:manga search would return.
+    name: 'Manga & graphic tales (public domain only)',
+    query: 'subject:manga AND mediatype:texts AND (format:pdf OR format:"Text PDF") AND (licenseurl:*publicdomain* OR licenseurl:*creativecommons.org/publicdomain* OR licenseurl:*creativecommons.org/licenses*)',
   },
   {
     name: 'Science & technology',
@@ -111,13 +143,19 @@ const DIRECT_PDF_SOURCES = [
 const SHELVES = [
   ['Indian PDF Reading Room', { local: 'indian-pdfs' }],
   ['All Indian Open PDFs', { archive: DIRECT_PDF_SOURCES[0].query }],
-  ['Encyclopedias & Reference', { archive: DIRECT_PDF_SOURCES[1].query }],
-  ['Comics & Graphic Novels', { archive: DIRECT_PDF_SOURCES[2].query }],
-  ['Manga', { archive: DIRECT_PDF_SOURCES[3].query }],
-  ['Fiction, Classics & Literature', { archive: DIRECT_PDF_SOURCES[4].query }],
-  ['Science, Math & Technology', { archive: DIRECT_PDF_SOURCES[5].query }],
-  ['History, Biography & Travel', { archive: DIRECT_PDF_SOURCES[6].query }],
-  ['Philosophy, Religion & Ideas', { archive: DIRECT_PDF_SOURCES[7].query }],
+  ['Fiction, Classics & Literature', { archive: DIRECT_PDF_SOURCES[1].query }],
+  ['Adventure', { archive: DIRECT_PDF_SOURCES[2].query }],
+  ['Mystery & Detective', { archive: DIRECT_PDF_SOURCES[3].query }],
+  ['Romance & Love Stories', { archive: DIRECT_PDF_SOURCES[4].query }],
+  ['Science Fiction & Fantasy', { archive: DIRECT_PDF_SOURCES[5].query }],
+  ['Poetry', { archive: DIRECT_PDF_SOURCES[6].query }],
+  ['Storybooks & Children', { archive: DIRECT_PDF_SOURCES[7].query }],
+  ['Encyclopedias & Reference', { archive: DIRECT_PDF_SOURCES[8].query }],
+  ['Comics & Graphic Novels', { archive: DIRECT_PDF_SOURCES[9].query }],
+  ['Manga & Graphic Tales', { archive: DIRECT_PDF_SOURCES[10].query }],
+  ['Science, Math & Technology', { archive: DIRECT_PDF_SOURCES[11].query }],
+  ['History, Biography & Travel', { archive: DIRECT_PDF_SOURCES[12].query }],
+  ['Philosophy, Religion & Ideas', { archive: DIRECT_PDF_SOURCES[13].query }],
 ];
 
 const RESOURCE_LINKS = DIRECT_PDF_SOURCES.map((source) => ({
@@ -175,12 +213,16 @@ function saveProgress(book, marker = 'Opened') {
 function archiveSearchUrl(query, pageSize = 24) {
   const params = new URLSearchParams({
     q: query,
-    fl: 'identifier,title,creator,subject,downloads,language,description',
     rows: pageSize,
     page: 1,
     output: 'json',
     sort: 'downloads desc',
   });
+  // archive.org's advancedsearch.php expects the field list as repeated fl[]
+  // params, not one comma-joined "fl" value — the latter is silently ignored
+  // and the API falls back to a default field set, which was one cause of
+  // shelves failing to populate.
+  ['identifier', 'title', 'creator', 'subject', 'downloads', 'language', 'description', 'licenseurl'].forEach((field) => params.append('fl[]', field));
   return `https://archive.org/advancedsearch.php?${params}`;
 }
 
@@ -219,12 +261,24 @@ async function hydrateArchivePdf(book) {
   return book;
 }
 
+async function hydrateInBatches(candidates, batchSize = 6) {
+  const hydrated = [];
+  for (let start = 0; start < candidates.length; start += batchSize) {
+    const batch = candidates.slice(start, start + batchSize);
+    hydrated.push(...await Promise.all(batch.map(hydrateArchivePdf)));
+  }
+  return hydrated;
+}
+
 async function searchArchive(query, count = 24) {
   const response = await fetch(archiveSearchUrl(query, count * 2));
   if (!response.ok) throw Error('The Internet Archive PDF index could not be reached. Please try again.');
   const data = await response.json();
   const candidates = (data.response?.docs || []).map(archiveBook);
-  const hydrated = await Promise.all(candidates.map(hydrateArchivePdf));
+  // Hydrate in small batches rather than one giant Promise.all — firing 30-48
+  // metadata requests at once was getting rate-limited by archive.org, so most
+  // candidates silently failed hydration and shelves came back empty.
+  const hydrated = await hydrateInBatches(candidates);
   const books = hydrated.filter((book) => pdfOf(book)).slice(0, count);
   remember(books);
   return books;
