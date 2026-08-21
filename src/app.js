@@ -89,8 +89,26 @@ const EXTRA_OPEN_BOOKS = [
 
 FREE_PDF_BOOKS.push(...EXTRA_OPEN_BOOKS);
 
+const OPENSTAX_EXPANSION = [
+  { id: 'openstax-physics', title: 'College Physics 2e', authors: [{ name: 'OpenStax' }], subjects: ['Physics', 'Science', 'Textbook', 'CC BY'], genre: 'Science, Math & Technology', download_count: 30500, pdfUrl: 'https://assets.openstax.org/oscms-prodcms/media/documents/College_Physics_2e-WEB.pdf', coverUrl: '', sourceName: 'OpenStax', sourceUrl: 'https://openstax.org/details/books/college-physics-2e', language: 'English', desc: 'A complete openly licensed physics textbook from OpenStax.' },
+  { id: 'openstax-statistics', title: 'Introductory Statistics 2e', authors: [{ name: 'OpenStax' }], subjects: ['Statistics', 'Mathematics', 'Textbook', 'CC BY'], genre: 'Science, Math & Technology', download_count: 30200, pdfUrl: 'https://assets.openstax.org/oscms-prodcms/media/documents/Introductory_Statistics_2e-WEB.pdf', coverUrl: '', sourceName: 'OpenStax', sourceUrl: 'https://openstax.org/details/books/introductory-statistics-2e', language: 'English', desc: 'A free statistics textbook for college and self-study learners.' },
+  { id: 'openstax-economics-3e', title: 'Principles of Economics 3e', authors: [{ name: 'OpenStax' }], subjects: ['Economics', 'Social science', 'Textbook', 'CC BY'], genre: 'History, Biography & Travel', download_count: 29800, pdfUrl: 'https://assets.openstax.org/oscms-prodcms/media/documents/Principles_of_Economics_3e-WEB.pdf', coverUrl: '', sourceName: 'OpenStax', sourceUrl: 'https://openstax.org/details/books/principles-economics-3e', language: 'English', desc: 'An openly licensed economics textbook for broad social-science shelves.' }
+];
+
+FREE_PDF_BOOKS.push(...OPENSTAX_EXPANSION);
+
 const SHELVES = [
-  ['Indian Open PDFs', { genre: 'Indian' }], ['Fiction, Classics & Literature', { genre: 'Fiction, Classics & Literature' }], ['Adventure', { genre: 'Adventure' }], ['Mystery & Detective', { genre: 'Mystery & Detective' }], ['Romance & Love Stories', { genre: 'Romance' }], ['Science Fiction & Fantasy', { genre: 'Science Fiction & Fantasy' }], ['Poetry', { genre: 'Poetry' }], ['Storybooks & Children', { genre: 'Storybooks & Children' }], ['Science, Math & Technology', { genre: 'Science, Math & Technology' }], ['History, Biography & Travel', { genre: 'History, Biography & Travel' }], ['Philosophy, Religion & Ideas', { genre: 'Philosophy, Religion & Ideas' }]
+  ['Indian Open PDFs', { genre: 'Indian', searchTerms: ['india', 'tagore', 'gandhi', 'gita'] }],
+  ['Fiction, Classics & Literature', { genre: 'Fiction, Classics & Literature', searchTerms: ['classic literature', 'dickens', 'austen', 'twain'] }],
+  ['Adventure', { genre: 'Adventure', searchTerms: ['adventure', 'sea stories', 'verne', 'stevenson'] }],
+  ['Mystery & Detective', { genre: 'Mystery & Detective', searchTerms: ['detective', 'mystery', 'sherlock', 'poe'] }],
+  ['Romance & Love Stories', { genre: 'Romance', searchTerms: ['romance', 'love stories', 'bronte', 'austen'] }],
+  ['Science Fiction & Fantasy', { genre: 'Science Fiction & Fantasy', searchTerms: ['science fiction', 'fantasy', 'wells', 'gothic'] }],
+  ['Poetry', { genre: 'Poetry', searchTerms: ['poetry', 'poems', 'shakespeare sonnets', 'tagore'] }],
+  ['Storybooks & Children', { genre: 'Storybooks & Children', searchTerms: ['children', 'fairy tales', 'wonderland', 'school stories'] }],
+  ['Science, Math & Technology', { genre: 'Science, Math & Technology', searchTerms: ['science textbook', 'mathematics', 'physics', 'biology'] }],
+  ['History, Biography & Travel', { genre: 'History, Biography & Travel', searchTerms: ['history', 'biography', 'travel', 'war'] }],
+  ['Philosophy, Religion & Ideas', { genre: 'Philosophy, Religion & Ideas', searchTerms: ['philosophy', 'religion', 'ethics', 'gita'] }]
 ];
 
 const RESOURCE_LINKS = [
@@ -164,7 +182,9 @@ async function searchGutendex(term, count = 18) {
 async function searchBooks(query, count = 24) {
   const term = typeof query === 'string' ? query : query?.search || '';
   const base = query?.genre ? FREE_PDF_BOOKS.filter((book) => genreMatch(book, query.genre)) : FREE_PDF_BOOKS.filter((book) => !term || `${book.title} ${author(book)} ${(book.subjects || []).join(' ')}`.toLowerCase().includes(term.toLowerCase()));
-  const gutendex = term ? await searchGutendex(term, 12) : [];
+  const searchTerms = query?.searchTerms || (term ? [term] : []);
+  const gutendexGroups = await Promise.all(searchTerms.slice(0, 4).map((searchTerm) => searchGutendex(searchTerm, Math.max(8, Math.ceil(count / 2)))));
+  const gutendex = gutendexGroups.flat().map((book) => query?.genre ? { ...book, genre: query.genre } : book);
   const seen = new Set();
   const merged = sortBooks([...base, ...gutendex].filter((book) => readableOf(book) && !/archive\.org|openlibrary\.org/i.test(readableOf(book)) && !seen.has(book.id) && seen.add(book.id))).slice(0, count);
   remember(merged); return merged;
@@ -218,9 +238,9 @@ function loadFeatured() {
 
 function showShelves() {
   const content = $('#content');
-  content.innerHTML = SHELVES.map((shelf, index) => `<section class="shelf"><div class="sectionHead"><h2>${shelf[0]}</h2><button data-shelf="${index}">See all →</button></div><div class="rule"></div><div class="rail" id="rail${index}">${'<div class="skeleton"></div>'.repeat(4)}</div></section>`).join('');
+  content.innerHTML = SHELVES.map((shelf, index) => `<section class="shelf"><div class="sectionHead"><h2>${shelf[0]}</h2><button data-shelf="${index}">See all →</button></div><div class="rule"></div><div class="rail" id="rail${index}">${'<div class="skeleton"></div>'.repeat(8)}</div></section>`).join('');
   document.querySelectorAll('[data-shelf]').forEach((button) => { button.onclick = () => showResults(SHELVES[button.dataset.shelf][1]); });
-  const observer = new IntersectionObserver((entries) => entries.filter((entry) => entry.isIntersecting).forEach(async (entry) => { observer.unobserve(entry.target); const index = Number(entry.target.id.replace('rail', '')); try { const books = await searchBooks(SHELVES[index][1], 12); entry.target.innerHTML = books.length ? books.map(bookCard).join('') : '<p class="muted">More open books are being curated for this genre.</p>'; } catch { entry.target.innerHTML = '<p class="muted">This shelf could not load right now.</p>'; } }), { rootMargin: '450px 0px' });
+  const observer = new IntersectionObserver((entries) => entries.filter((entry) => entry.isIntersecting).forEach(async (entry) => { observer.unobserve(entry.target); const index = Number(entry.target.id.replace('rail', '')); try { const books = await searchBooks(SHELVES[index][1], 20); entry.target.innerHTML = books.length ? books.map(bookCard).join('') : '<p class="muted">More open books are being curated for this genre.</p>'; } catch { entry.target.innerHTML = '<p class="muted">This shelf could not load right now.</p>'; } }), { rootMargin: '450px 0px' });
   document.querySelectorAll('.rail').forEach((rail) => observer.observe(rail));
 }
 
@@ -228,7 +248,7 @@ async function showResults(query) {
   const label = query?.genre || (typeof query === 'string' ? query : query.search) || 'open books';
   const content = $('#content');
   content.innerHTML = `<section class="shelf"><div class="sectionHead"><h2>Results for “${esc(label)}”</h2></div><div class="rule"></div><div class="loader">◌ Searching curated open books…</div></section>`;
-  try { const books = await searchBooks(query, 36); content.innerHTML = `<section class="shelf"><div class="sectionHead"><h2>Results for “${esc(label)}”</h2></div><div class="rule"></div><div class="results">${books.length ? books.map(bookCard).join('') : '<p class="muted">No matching non-Archive open books found. Try another title, author, or genre.</p>'}</div></section>`; content.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  try { const books = await searchBooks(query, 60); content.innerHTML = `<section class="shelf"><div class="sectionHead"><h2>Results for “${esc(label)}”</h2></div><div class="rule"></div><div class="results">${books.length ? books.map(bookCard).join('') : '<p class="muted">No matching non-Archive open books found. Try another title, author, or genre.</p>'}</div></section>`; content.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   catch (error) { content.innerHTML = `<p class="muted">${esc(error.message)}</p>`; }
 }
 
