@@ -37,7 +37,7 @@
   }
 
   .bookCard {
-    height: 284px;
+    height: 304px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -91,6 +91,9 @@
     margin-top: auto;
     padding: 8px 5px;
     min-height: 33px;
+    height: 33px;
+    flex: 0 0 33px;
+    box-sizing: border-box;
     font-size: 11px;
     line-height: 17px;
     border-radius: 9px;
