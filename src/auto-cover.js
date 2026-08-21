@@ -20,10 +20,17 @@
     const cache = readCache(); const saved = cache[cacheKey];
     if (saved && Date.now() - saved.savedAt < TTL) { apply(card, saved.coverUrl); return; }
     try {
-      const response = await fetch('/api/resolve-cover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, author }) });
+      // The server exposes /api/book-cover. Keep the API key server-side.
+      const response = await fetch('/api/book-cover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, author })
+      });
       if (!response.ok) return;
       const result = await response.json();
-      cache[cacheKey] = { savedAt: Date.now(), coverUrl: result?.coverUrl || null }; writeCache(cache); apply(card, result?.coverUrl || null);
+      cache[cacheKey] = { savedAt: Date.now(), coverUrl: result?.coverUrl || null };
+      writeCache(cache);
+      apply(card, result?.coverUrl || null);
     } catch {}
   }
 
