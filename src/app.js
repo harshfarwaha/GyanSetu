@@ -6,7 +6,6 @@ const INDIAN_PDF_BOOKS = [
     subjects: ['Kashmir Shaivism', 'Sanskrit', 'Philosophy', 'Public domain scans'],
     download_count: 18400,
     pdfUrl: 'https://archive.org/download/VijnanabhairavaOrDivineConsciousnessJaidevaSingh/Vijnanabhairava%20or%20Divine%20Consciousness%20-%20Jaideva%20Singh.pdf',
-    sourceUrl: 'https://archive.org/details/VijnanabhairavaOrDivineConsciousnessJaidevaSingh',
     coverUrl: 'https://archive.org/services/img/VijnanabhairavaOrDivineConsciousnessJaidevaSingh',
     archiveIdentifier: 'VijnanabhairavaOrDivineConsciousnessJaidevaSingh',
     language: 'Sanskrit / English',
@@ -19,7 +18,6 @@ const INDIAN_PDF_BOOKS = [
     subjects: ['Poetry', 'Bengali literature', 'Nobel classics', 'Public domain'],
     download_count: 32500,
     pdfUrl: 'https://archive.org/download/gitanjalisongoffe00tagouoft/gitanjalisongoffe00tagouoft.pdf',
-    sourceUrl: 'https://archive.org/details/gitanjalisongoffe00tagouoft',
     coverUrl: 'https://archive.org/services/img/gitanjalisongoffe00tagouoft',
     archiveIdentifier: 'gitanjalisongoffe00tagouoft',
     language: 'English',
@@ -32,7 +30,6 @@ const INDIAN_PDF_BOOKS = [
     subjects: ['Hindi literature', 'Novel', 'Indian classics', 'Public access'],
     download_count: 29100,
     pdfUrl: 'https://archive.org/download/Godan_201807/Godan.pdf',
-    sourceUrl: 'https://archive.org/details/Godan_201807',
     coverUrl: 'https://archive.org/services/img/Godan_201807',
     archiveIdentifier: 'Godan_201807',
     language: 'Hindi',
@@ -45,7 +42,6 @@ const INDIAN_PDF_BOOKS = [
     subjects: ['Indian thought', 'Freedom movement', 'Political philosophy', 'Public domain'],
     download_count: 24800,
     pdfUrl: 'https://archive.org/download/hindswarajorind00gandrich/hindswarajorind00gandrich.pdf',
-    sourceUrl: 'https://archive.org/details/hindswarajorind00gandrich',
     coverUrl: 'https://archive.org/services/img/hindswarajorind00gandrich',
     archiveIdentifier: 'hindswarajorind00gandrich',
     language: 'English',
@@ -58,7 +54,6 @@ const INDIAN_PDF_BOOKS = [
     subjects: ['Sanskrit', 'Philosophy', 'Sacred texts', 'Public domain'],
     download_count: 37200,
     pdfUrl: 'https://archive.org/download/bhagavadgitawith00telauoft/bhagavadgitawith00telauoft.pdf',
-    sourceUrl: 'https://archive.org/details/bhagavadgitawith00telauoft',
     coverUrl: 'https://archive.org/services/img/bhagavadgitawith00telauoft',
     archiveIdentifier: 'bhagavadgitawith00telauoft',
     language: 'Sanskrit / English',
@@ -71,7 +66,6 @@ const INDIAN_PDF_BOOKS = [
     subjects: ['Tamil literature', 'Ethics', 'Poetry', 'Public domain'],
     download_count: 21400,
     pdfUrl: 'https://archive.org/download/tirukkuralenglish00tiruuoft/tirukkuralenglish00tiruuoft.pdf',
-    sourceUrl: 'https://archive.org/details/tirukkuralenglish00tiruuoft',
     coverUrl: 'https://archive.org/services/img/tirukkuralenglish00tiruuoft',
     archiveIdentifier: 'tirukkuralenglish00tiruuoft',
     language: 'Tamil / English',
@@ -79,14 +73,14 @@ const INDIAN_PDF_BOOKS = [
   },
 ];
 
-const OPEN_LIBRARY_SOURCES = [
+const DIRECT_PDF_SOURCES = [
   {
     name: 'Indian books mega library',
     query: 'collection:(opensource_indian_books OR digitallibraryindia) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
   },
   {
-    name: 'Encyclopedias',
-    query: 'subject:(encyclopedia OR encyclopaedia) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    name: 'Encyclopedias & reference',
+    query: 'subject:(encyclopedia OR encyclopaedia OR dictionary OR atlas OR reference) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
   },
   {
     name: 'Comics & graphic novels',
@@ -97,32 +91,41 @@ const OPEN_LIBRARY_SOURCES = [
     query: 'subject:manga AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
   },
   {
-    name: 'Science, fiction & every genre',
-    query: 'mediatype:texts AND (subject:science OR subject:fiction OR subject:history OR subject:biography OR subject:poetry) AND (format:pdf OR format:"Text PDF")',
+    name: 'Fiction & classics',
+    query: 'subject:(fiction OR classics OR literature OR novels OR drama OR poetry) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Science & technology',
+    query: 'subject:(science OR mathematics OR technology OR engineering OR medicine) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'History & biography',
+    query: 'subject:(history OR biography OR memoir OR travel OR geography) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Philosophy, religion & ideas',
+    query: 'subject:(philosophy OR religion OR spirituality OR psychology OR sociology) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
   },
 ];
 
 const SHELVES = [
   ['Indian PDF Reading Room', { local: 'indian-pdfs' }],
-  ['All Indian Open PDFs', { archive: OPEN_LIBRARY_SOURCES[0].query }],
-  ['Encyclopedias', { archive: OPEN_LIBRARY_SOURCES[1].query }],
-  ['Comics & Graphic Novels', { archive: OPEN_LIBRARY_SOURCES[2].query }],
-  ['Manga', { archive: OPEN_LIBRARY_SOURCES[3].query }],
-  ['Curated Classics', { topic: 'fiction' }],
-  ['Indian Literature', { search: 'Tagore Premchand Ramayana Mahabharata' }],
-  ['Hindi & Regional Voices', { search: 'Hindi Bengali Tamil Marathi Sanskrit' }],
-  ['Poetry & Drama', { topic: 'poetry' }],
-  ['Philosophy & Ideas', { topic: 'philosophy' }],
-  ['Science & Discovery', { archive: OPEN_LIBRARY_SOURCES[4].query }],
+  ['All Indian Open PDFs', { archive: DIRECT_PDF_SOURCES[0].query }],
+  ['Encyclopedias & Reference', { archive: DIRECT_PDF_SOURCES[1].query }],
+  ['Comics & Graphic Novels', { archive: DIRECT_PDF_SOURCES[2].query }],
+  ['Manga', { archive: DIRECT_PDF_SOURCES[3].query }],
+  ['Fiction, Classics & Literature', { archive: DIRECT_PDF_SOURCES[4].query }],
+  ['Science, Math & Technology', { archive: DIRECT_PDF_SOURCES[5].query }],
+  ['History, Biography & Travel', { archive: DIRECT_PDF_SOURCES[6].query }],
+  ['Philosophy, Religion & Ideas', { archive: DIRECT_PDF_SOURCES[7].query }],
 ];
 
-const RESOURCE_LINKS = [
-  { name: 'Internet Archive Open Source Books', type: 'All genres', url: 'https://archive.org/details/opensource', desc: 'Broad public-access library for PDFs across fiction, science, history, comics, manga, encyclopedias, and more.' },
-  { name: 'Internet Archive Indian Books', type: 'Embedded source', url: 'https://archive.org/details/opensource_indian_books', desc: 'Source collection used for public-access Indian scanned editions embedded in the GyanSetu reader.' },
-  { name: 'Digital Library of India', type: 'Indian books', url: 'https://archive.org/details/digitallibraryindia', desc: 'Large public archive of scanned Indian books in many languages hosted by the Internet Archive.' },
-  { name: 'Project Gutenberg India shelf', type: 'Indian classics', url: 'https://www.gutenberg.org/ebooks/bookshelf/101', desc: 'Public-domain Indian literature and India-related classics available for free reading.' },
-  { name: 'Wikisource India languages', type: 'Indian texts', url: 'https://wikisource.org/wiki/Main_Page', desc: 'Proofread public-domain texts in Hindi, Sanskrit, Bengali, Tamil, Telugu, Urdu, and more.' },
-];
+const RESOURCE_LINKS = DIRECT_PDF_SOURCES.map((source) => ({
+  name: source.name,
+  type: 'Direct PDFs only',
+  query: source.query,
+  desc: 'Browse free online books in this genre as directly opened PDF files inside GyanSetu—no plain-text editions or catalogue-only links.',
+}));
 
 const HISTORY_KEY = 'gyansetu.readingHistory';
 const USER_KEY = 'gyansetu.googleUser';
@@ -136,8 +139,7 @@ const app = $('#app');
 const author = (book) => (book.authors || []).map((person) => person.name).join(', ') || 'Unknown author';
 const cover = (book) => book.coverUrl || book.formats?.['image/jpeg'] || '';
 const pdfOf = (book) => book.pdfUrl || Object.entries(book.formats || {}).find(([type, url]) => /pdf/i.test(type) || String(url).toLowerCase().split('?')[0].endsWith('.pdf'))?.[1]?.replace('http://', 'https://') || '';
-const archiveIdOf = (book) => book.archiveIdentifier || book.sourceUrl?.match(/archive\.org\/details\/([^/?#]+)/)?.[1] || book.pdfUrl?.match(/archive\.org\/download\/([^/?#]+)/)?.[1] || '';
-const archiveEmbedOf = (book) => { const id = archiveIdOf(book); return id ? `https://archive.org/embed/${encodeURIComponent(id)}` : ''; };
+const archiveIdOf = (book) => book.archiveIdentifier || book.pdfUrl?.match(/archive\.org\/download\/([^/?#]+)/)?.[1] || '';
 const esc = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const remember = (books) => books.forEach((book) => library.set(String(book.id), book));
 
@@ -194,7 +196,6 @@ function archiveBook(doc) {
     subjects,
     download_count: doc.downloads || 0,
     pdfUrl: `https://archive.org/download/${doc.identifier}/${doc.identifier}.pdf`,
-    sourceUrl: `https://archive.org/details/${doc.identifier}`,
     coverUrl: `https://archive.org/services/img/${doc.identifier}`,
     language: Array.isArray(doc.language) ? doc.language.join(', ') : doc.language || 'Open edition',
     desc: description || 'A free public-access scan from an open library source, opened as a complete in-site PDF whenever the source provides one.',
@@ -214,37 +215,26 @@ async function hydrateArchivePdf(book) {
     const files = data.files || [];
     const preferred = files.find((file) => /\.pdf$/i.test(file.name) && !/_text\.pdf$/i.test(file.name)) || files.find((file) => /\.pdf$/i.test(file.name) || /pdf/i.test(file.format || ''));
     if (preferred?.name) book.pdfUrl = `https://archive.org/download/${archiveIdentifier}/${encodeURIComponent(preferred.name).replace(/%2F/g, '/')}`;
-  } catch { /* Keep the predictable fallback URL so the reader can still try to open the item. */ }
+  } catch { book.pdfUrl = ''; }
   return book;
 }
 
 async function searchArchive(query, count = 24) {
-  const response = await fetch(archiveSearchUrl(query, count));
+  const response = await fetch(archiveSearchUrl(query, count * 2));
   if (!response.ok) throw Error('The Internet Archive PDF index could not be reached. Please try again.');
   const data = await response.json();
-  const books = (data.response?.docs || []).map(archiveBook);
+  const candidates = (data.response?.docs || []).map(archiveBook);
+  const hydrated = await Promise.all(candidates.map(hydrateArchivePdf));
+  const books = hydrated.filter((book) => pdfOf(book)).slice(0, count);
   remember(books);
   return books;
-}
-
-function booksUrl(query, pageSize = 24) {
-  const params = new URLSearchParams({ page_size: pageSize });
-  if (typeof query === 'string') params.set('search', query);
-  else if (query?.topic) params.set('topic', query.topic);
-  else if (query?.search) params.set('search', query.search);
-  return `https://gutendex.com/books/?${params}`;
 }
 
 async function searchBooks(query, count = 24) {
   if (query?.local === 'indian-pdfs') { remember(INDIAN_PDF_BOOKS); return INDIAN_PDF_BOOKS; }
   if (query?.archive) return searchArchive(query.archive, count);
-  if (typeof query === 'string' && /pdf|indian books|encyclopedia|comics|manga/i.test(query)) return searchArchive(`(${query}) AND mediatype:texts AND (format:pdf OR format:"Text PDF")`, count);
-  const response = await fetch(booksUrl(query, count));
-  if (!response.ok) throw Error('The open library index could not be reached. Please try again.');
-  const data = await response.json();
-  const books = (data.results || []).slice(0, count).filter((book) => book.formats);
-  remember(books);
-  return books;
+  const term = typeof query === 'string' ? query : query?.search || query?.topic || 'free books';
+  return searchArchive(`(${term}) AND mediatype:texts AND (format:pdf OR format:"Text PDF")`, count);
 }
 
 function render() {
@@ -272,11 +262,13 @@ function loginFlow() {
 
 function renderResources() {
   const box = $('#resources');
-  box.innerHTML = `<div class="sectionHead"><div><p class="eyebrow">Free & open collections</p><h2>Sources for in-site PDFs</h2></div><span>Searches fetch PDFs from open catalogues</span></div><div class="resourceGrid">${RESOURCE_LINKS.map((item) => `<a class="resourceCard" href="${item.url}" target="_blank" rel="noopener"><small>${esc(item.type)}</small><b>${esc(item.name)}</b><span>${esc(item.desc)}</span></a>`).join('')}</div>`;
+  box.innerHTML = `<div class="sectionHead"><div><p class="eyebrow">Free direct PDF collections</p><h2>Every shelf opens PDFs only</h2></div><span>No plain text books or catalogue-only links</span></div><div class="resourceGrid">${RESOURCE_LINKS.map((item) => `<button class="resourceCard" data-query="${esc(item.query)}"><small>${esc(item.type)}</small><b>${esc(item.name)}</b><span>${esc(item.desc)}</span></button>`).join('')}</div>`;
+  box.querySelectorAll('[data-query]').forEach((button) => { button.onclick = () => showResults({ archive: button.dataset.query }); });
 }
 
-function sourceLink(book) {
-  return book.sourceUrl ? `<a class="sourceLink" href="${book.sourceUrl}" target="_blank" rel="noopener">Source record</a>` : '';
+function directPdfLink(book) {
+  const pdfUrl = pdfOf(book);
+  return pdfUrl ? `<a class="sourceLink" href="${pdfUrl}" target="_blank" rel="noopener">Open direct PDF</a>` : '';
 }
 
 function renderHistory() {
@@ -290,7 +282,8 @@ function renderHistory() {
 function bookCard(book) {
   const title = esc(book.title);
   const hasPdf = Boolean(pdfOf(book));
-  return `<article class="bookCard"><button class="coverBtn" data-id="${book.id}" aria-label="View details for ${title}">${cover(book) ? `<img src="${cover(book)}" alt="${title}">` : `<span>${title}</span>`}<em>${hasPdf ? 'PDF' : 'TEXT'}</em></button><h3>${title}</h3><p>${esc(author(book))}</p><button class="read" data-id="${book.id}">${hasPdf ? 'Read PDF' : 'View details'}</button></article>`;
+  if (!hasPdf) return '';
+  return `<article class="bookCard"><button class="coverBtn" data-id="${book.id}" aria-label="View details for ${title}">${cover(book) ? `<img src="${cover(book)}" alt="${title}">` : `<span>${title}</span>`}<em>PDF</em></button><h3>${title}</h3><p>${esc(author(book))}</p><button class="read" data-id="${book.id}">Read PDF</button></article>`;
 }
 
 async function loadFeatured() {
@@ -311,7 +304,7 @@ function showShelves() {
 }
 
 async function showResults(query) {
-  const label = query?.local === 'indian-pdfs' ? 'Indian PDF library' : query?.archive ? 'Open-library PDF collection' : typeof query === 'string' ? query : query.topic || query.search;
+  const label = query?.local === 'indian-pdfs' ? 'Indian PDF library' : query?.archive ? 'Direct PDF collection' : typeof query === 'string' ? query : query.topic || query.search;
   const content = $('#content');
   content.innerHTML = `<section class="shelf"><div class="sectionHead"><h2>Results for “${esc(label)}”</h2></div><div class="rule"></div><div class="loader">◌ Searching open books…</div></section>`;
   try {
@@ -324,37 +317,24 @@ async function showResults(query) {
 function openDetails(book) {
   if (!book) return;
   const hasPdf = Boolean(pdfOf(book));
-  document.body.insertAdjacentHTML('beforeend', `<div class="modal" role="dialog" aria-modal="true"><div class="details"><button class="close" aria-label="Close details">×</button><div class="detailCover">${cover(book) ? `<img src="${cover(book)}" alt="">` : `<span>${esc(book.title)}</span>`}</div><div><p class="eyebrow">★ ${hasPdf ? 'Embedded PDF edition' : 'Open book details'}</p><h2>${esc(book.title)}</h2><p class="byline">${esc(author(book))}</p><p class="desc">${esc(book.desc || (hasPdf ? 'Read the full PDF scan directly inside GyanSetu with vertical scrolling and the original page look.' : 'This title is available through the open catalogue. PDF availability depends on the source edition.'))}</p><dl><dt>Subjects</dt><dd>${esc((book.subjects || []).slice(0, 4).join(' · ') || 'Classic literature')}</dd><dt>Language</dt><dd>${esc(book.language || (book.languages || []).join(', ') || 'Open edition')}</dd><dt>Format</dt><dd>${hasPdf ? 'Complete scrollable PDF' : 'Catalogue edition'}</dd></dl>${sourceLink(book)}<button class="primary">${hasPdf ? '📖 Read PDF in GyanSetu' : '📖 Open reader'}</button></div></div></div>`);
+  document.body.insertAdjacentHTML('beforeend', `<div class="modal" role="dialog" aria-modal="true"><div class="details"><button class="close" aria-label="Close details">×</button><div class="detailCover">${cover(book) ? `<img src="${cover(book)}" alt="">` : `<span>${esc(book.title)}</span>`}</div><div><p class="eyebrow">★ ${hasPdf ? 'Embedded PDF edition' : 'Open book details'}</p><h2>${esc(book.title)}</h2><p class="byline">${esc(author(book))}</p><p class="desc">${esc(book.desc || (hasPdf ? 'Read the full PDF scan directly inside GyanSetu with vertical scrolling and the original page look.' : 'This title needs a directly accessible PDF before it can be opened in GyanSetu.'))}</p><dl><dt>Subjects</dt><dd>${esc((book.subjects || []).slice(0, 4).join(' · ') || 'Classic literature')}</dd><dt>Language</dt><dd>${esc(book.language || (book.languages || []).join(', ') || 'Open edition')}</dd><dt>Format</dt><dd>Complete scrollable PDF</dd></dl>${directPdfLink(book)}<button class="primary" ${hasPdf ? '' : 'disabled'}>${hasPdf ? '📖 Read PDF in GyanSetu' : 'PDF unavailable'}</button></div></div></div>`);
   $('.close').onclick = () => $('.modal').remove();
   $('.modal').onclick = (event) => { if (event.target.classList.contains('modal')) event.target.remove(); };
-  $('.primary').onclick = () => { $('.modal').remove(); hasPdf ? openPdfReader(book) : openTextFallback(book); };
+  $('.primary').onclick = () => { if (!hasPdf) return; $('.modal').remove(); openPdfReader(book); };
 }
 
 async function openPdfReader(book) {
   await hydrateArchivePdf(book);
   const pdfUrl = pdfOf(book);
-  const embedUrl = archiveEmbedOf(book);
-  const readerUrl = pdfUrl ? `${pdfUrl}#toolbar=1&navpanes=0&view=FitH` : embedUrl;
+  if (!pdfUrl) { alert('A direct PDF is not available for this item.'); return; }
+  const readerUrl = `${pdfUrl}#toolbar=1&navpanes=0&view=FitH`;
   saveProgress(book, 'PDF opened');
-  document.body.insertAdjacentHTML('beforeend', `<section class="reader" role="dialog" aria-modal="true"><div class="readerShell pdfShell"><div class="readerTop"><div><small>Original scanned PDF</small><b>${esc(book.title)}</b></div><button id="rclose" aria-label="Close reader">×</button></div><div class="pdfToolbar"><span>Scroll naturally to read the complete book inside GyanSetu.</span>${pdfUrl ? `<a href="${pdfUrl}" download target="_blank" rel="noopener">Download PDF</a>` : sourceLink(book)}</div><iframe class="pdfFrame" title="${esc(book.title)} PDF" src="${readerUrl}"></iframe></div></section>`);
+  document.body.insertAdjacentHTML('beforeend', `<section class="reader" role="dialog" aria-modal="true"><div class="readerShell pdfShell"><div class="readerTop"><div><small>Original scanned PDF</small><b>${esc(book.title)}</b></div><button id="rclose" aria-label="Close reader">×</button></div><div class="pdfToolbar"><span>Scroll naturally to read the complete direct PDF inside GyanSetu.</span><a href="${pdfUrl}" download target="_blank" rel="noopener">Download PDF</a></div><iframe class="pdfFrame" title="${esc(book.title)} PDF" src="${readerUrl}"></iframe></div></section>`);
   const reader = $('.reader');
   const close = () => { reader?.remove(); if (activeReaderCleanup) window.removeEventListener('keydown', activeReaderCleanup); activeReaderCleanup = null; renderHistory(); };
   $('#rclose').onclick = close;
   activeReaderCleanup = (event) => { if (event.key === 'Escape') close(); };
   window.addEventListener('keydown', activeReaderCleanup);
-}
-
-function openTextFallback(book) {
-  const url = Object.entries(book.formats || {}).find(([type]) => type.startsWith('text/plain'))?.[1]?.replace('http://', 'https://');
-  if (!url) { alert('A complete PDF is not available for this catalogue item yet. Try the Indian PDF Reading Room shelf.'); return; }
-  saveProgress(book, 'Text opened');
-  document.body.insertAdjacentHTML('beforeend', `<section class="reader" role="dialog" aria-modal="true"><div class="readerShell pdfShell"><div class="readerTop"><div><small>Continuous reading view</small><b>${esc(book.title)}</b></div><button id="rclose" aria-label="Close reader">×</button></div><article class="textScroll"><div class="loader">◌ Opening the text…</div></article></div></section>`);
-  const reader = $('.reader');
-  const close = () => { reader?.remove(); if (activeReaderCleanup) window.removeEventListener('keydown', activeReaderCleanup); activeReaderCleanup = null; renderHistory(); };
-  $('#rclose').onclick = close;
-  activeReaderCleanup = (event) => { if (event.key === 'Escape') close(); };
-  window.addEventListener('keydown', activeReaderCleanup);
-  fetch(url).then((response) => response.text()).then((text) => { $('.textScroll').innerHTML = `<pre>${esc(text.replace(/[\s\S]*?\*\*\* START OF (?:THE|THIS) PROJECT GUTENBERG EBOOK[^\n]*\*\*\*/i, '').replace(/\*\*\* END OF (?:THE|THIS) PROJECT GUTENBERG EBOOK[\s\S]*/i, '').trim())}</pre>`; }).catch(() => { $('.textScroll').innerHTML = '<p class="muted">This text could not be opened right now.</p>'; });
 }
 
 render();
