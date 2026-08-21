@@ -62,37 +62,6 @@
       .uiWindowBody .sectionHead { display: none; }
       .uiWindowBody .rule { display: none; }
 
-      .uiSearchOverlay {
-        position: fixed;
-        z-index: 9997;
-        top: 78px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: min(920px, calc(100vw - 28px));
-        max-height: min(72vh, 720px);
-        overflow: hidden;
-        border: 1px solid rgba(210, 174, 99, .38);
-        border-radius: 0 0 22px 22px;
-        background: var(--surface, #0d1210);
-        box-shadow: 0 24px 60px rgba(0,0,0,.5);
-      }
-      .uiSearchHead {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 12px 16px;
-        border-bottom: 1px solid rgba(210, 174, 99, .2);
-      }
-      .uiSearchHead strong { font-size: .95rem; }
-      .uiSearchHead button { background: none; border: 0; color: inherit; cursor: pointer; font-size: 20px; }
-      .uiSearchBody { max-height: calc(min(72vh, 720px) - 52px); overflow: auto; padding: 14px; }
-      .uiSearchBody .shelf { margin: 0; }
-      .uiSearchBody .sectionHead { display: none; }
-      .uiSearchBody .rule { display: none; }
-      .uiSearchBody .results { margin: 0; }
-      .uiSearchBody .bookCard { min-width: 0; }
-
       body.gyansetu-ui-locked { overflow: hidden; }
       body.gyansetu-searching .topbar { position: relative; z-index: 9999; }
 
@@ -101,13 +70,6 @@
         .uiWindow { max-height: calc(100vh - 72px); border-radius: 18px; }
         .uiWindowHead { padding: 14px 16px; }
         .uiWindowBody { padding: 10px; }
-        .uiSearchOverlay {
-          top: 64px;
-          width: calc(100vw - 12px);
-          max-height: 76vh;
-          border-radius: 0 0 18px 18px;
-        }
-        .uiSearchBody { max-height: calc(76vh - 52px); padding: 10px; }
       }
     `;
     document.head.appendChild(style);
@@ -210,33 +172,35 @@
     event.preventDefault();
     const input = form.querySelector('#q');
     const query = input?.value?.trim();
-    if (!query || document.querySelector('.uiSearchOverlay')) return;
+    if (!query || document.querySelector('.uiOverlay')) return;
 
-    const overlay = document.createElement('section');
-    overlay.className = 'uiSearchOverlay';
+    // Search uses the exact same full-screen window as the genre "See all" action.
+    const overlay = document.createElement('div');
+    overlay.className = 'uiOverlay';
     overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-label', 'Search results');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', `Search results for ${query}`);
 
-    const head = document.createElement('div');
-    head.className = 'uiSearchHead';
-    head.innerHTML = `<strong>Search results for “${escapeHtml(query)}”</strong>`;
-    const close = document.createElement('button');
-    close.type = 'button';
-    close.setAttribute('aria-label', 'Close search results');
-    close.textContent = '×';
+    const windowEl = document.createElement('section');
+    windowEl.className = 'uiWindow';
+    const head = document.createElement('header');
+    head.className = 'uiWindowHead';
+    head.innerHTML = `<div><h2>Search results</h2><p>Results for “${escapeHtml(query)}”</p></div>`;
+    const close = makeCloseButton();
     head.appendChild(close);
-
     const body = document.createElement('div');
-    body.className = 'uiSearchBody';
-    overlay.append(head, body);
+    body.className = 'uiWindowBody';
+    windowEl.append(head, body);
+    overlay.appendChild(windowEl);
     document.body.appendChild(overlay);
-    document.body.classList.add('gyansetu-searching');
+    document.body.classList.add('gyansetu-ui-locked', 'gyansetu-searching');
 
     const state = createTemporaryContent(body);
-    if (!state) { overlay.remove(); return; }
+    if (!state) { overlay.remove(); document.body.classList.remove('gyansetu-ui-locked', 'gyansetu-searching'); return; }
 
     const closeSearch = () => closeActiveOverlay(overlay, state, 'search');
     close.onclick = closeSearch;
+    overlay.onclick = (e) => { if (e.target === overlay) closeSearch(); };
 
     try {
       await Promise.resolve(originalSubmit.call(form, event));
