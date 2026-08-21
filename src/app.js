@@ -245,33 +245,61 @@ function archiveBook(doc) {
   };
 }
 
+// Caches the verified PDF URL per archive.org identifier so the same item is
+// never metadata-checked twice, even if it shows up on more than one shelf.
+const pdfVerifyCache = new Map();
+
+async function fetchWithTimeout(url, ms = 6000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try { return await fetch(url, { signal: controller.signal }); }
+  finally { clearTimeout(timer); }
+}
+
 async function hydrateArchivePdf(book) {
   const archiveIdentifier = archiveIdOf(book);
-  if (!archiveIdentifier || book.pdfChecked) return book;
+  if (!archiveIdentifier) return book;
   book.archiveIdentifier = archiveIdentifier;
+
+  if (!pdfVerifyCache.has(archiveIdentifier)) {
+    pdfVerifyCache.set(archiveIdentifier, (async () => {
+      try {
+        const response = await fetchWithTimeout(`https://archive.org/metadata/${archiveIdentifier}`);
+        if (!response.ok) return '';
+        const data = await response.json();
+        const files = data.files || [];
+        const preferred = files.find((file) => /\.pdf$/i.test(file.name) && !/_text\.pdf$/i.test(file.name)) || files.find((file) => /\.pdf$/i.test(file.name) || /pdf/i.test(file.format || ''));
+        return preferred?.name ? `https://archive.org/download/${archiveIdentifier}/${encodeURIComponent(preferred.name).replace(/%2F/g, '/')}` : '';
+      } catch { return ''; }
+    })());
+  }
+
+  book.pdfUrl = await pdfVerifyCache.get(archiveIdentifier);
   book.pdfChecked = true;
-  try {
-    const response = await fetch(`https://archive.org/metadata/${archiveIdentifier}`);
-    if (!response.ok) return book;
-    const data = await response.json();
-    const files = data.files || [];
-    const preferred = files.find((file) => /\.pdf$/i.test(file.name) && !/_text\.pdf$/i.test(file.name)) || files.find((file) => /\.pdf$/i.test(file.name) || /pdf/i.test(file.format || ''));
-    if (preferred?.name) book.pdfUrl = `https://archive.org/download/${archiveIdentifier}/${encodeURIComponent(preferred.name).replace(/%2F/g, '/')}`;
-  } catch { book.pdfUrl = ''; }
   return book;
 }
 
+async function hydrateInBatches(candidates, batchSize = 10) {
+  const hydrated = [];
+  for (let start = 0; start < candidates.length; start += batchSize) {
+    const batch = candidates.slice(start, start + batchSize);
+    hydrated.push(...await Promise.all(batch.map(hydrateArchivePdf)));
+  }
+  return hydrated;
+}
+
 async function searchArchive(query, count = 24) {
-  const response = await fetch(archiveSearchUrl(query, count));
+  const response = await fetch(archiveSearchUrl(query, Math.ceil(count * 1.4)));
   if (!response.ok) throw Error('The Internet Archive PDF index could not be reached. Please try again.');
   const data = await response.json();
-  // Cards render off the guessed pdfUrl that archiveBook() already sets
-  // (archive.org/download/<id>/<id>.pdf), so no per-book metadata lookup is
-  // needed just to populate a shelf. The exact PDF filename is only verified
-  // via hydrateArchivePdf() at click-time, in openPdfReader() — this is what
-  // made shelves take so long to appear, since every card used to wait on its
-  // own archive.org/metadata/ round trip before it could even render.
-  const books = (data.response?.docs || []).map(archiveBook).slice(0, count);
+  const candidates = (data.response?.docs || []).map(archiveBook);
+  // Verify PDFs in parallel batches (cached per identifier, timeout per request)
+  // rather than one huge unbounded Promise.all — that combination is what made
+  // this both fast and correct: correct because we only ever show books whose
+  // PDF link was actually confirmed, fast because repeats across shelves are
+  // free and a stuck request can't block the rest of the batch.
+  const hydrated = await hydrateInBatches(candidates);
+  const books = hydrated.filter((book) => pdfOf(book)).slice(0, count);
   remember(books);
   return books;
 }
