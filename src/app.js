@@ -73,17 +73,45 @@ const INDIAN_PDF_BOOKS = [
   },
 ];
 
+const OPEN_LIBRARY_SOURCES = [
+  {
+    name: 'Indian books mega library',
+    query: 'collection:(opensource_indian_books OR digitallibraryindia) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Encyclopedias',
+    query: 'subject:(encyclopedia OR encyclopaedia) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Comics & graphic novels',
+    query: 'subject:(comics OR "comic books" OR "graphic novels") AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Manga',
+    query: 'subject:manga AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+  },
+  {
+    name: 'Science, fiction & every genre',
+    query: 'mediatype:texts AND (subject:science OR subject:fiction OR subject:history OR subject:biography OR subject:poetry) AND (format:pdf OR format:"Text PDF")',
+  },
+];
+
 const SHELVES = [
   ['Indian PDF Reading Room', { local: 'indian-pdfs' }],
+  ['All Indian Open PDFs', { archive: OPEN_LIBRARY_SOURCES[0].query }],
+  ['Encyclopedias', { archive: OPEN_LIBRARY_SOURCES[1].query }],
+  ['Comics & Graphic Novels', { archive: OPEN_LIBRARY_SOURCES[2].query }],
+  ['Manga', { archive: OPEN_LIBRARY_SOURCES[3].query }],
   ['Curated Classics', { topic: 'fiction' }],
   ['Indian Literature', { search: 'Tagore Premchand Ramayana Mahabharata' }],
   ['Hindi & Regional Voices', { search: 'Hindi Bengali Tamil Marathi Sanskrit' }],
   ['Poetry & Drama', { topic: 'poetry' }],
   ['Philosophy & Ideas', { topic: 'philosophy' }],
-  ['Science & Discovery', { topic: 'science' }],
+  ['Science & Discovery', { archive: OPEN_LIBRARY_SOURCES[4].query }],
 ];
 
 const RESOURCE_LINKS = [
+  { name: 'Internet Archive Open Source Books', type: 'All genres', url: 'https://archive.org/details/opensource', desc: 'Broad public-access library for PDFs across fiction, science, history, comics, manga, encyclopedias, and more.' },
   { name: 'Internet Archive Indian Books', type: 'Embedded source', url: 'https://archive.org/details/opensource_indian_books', desc: 'Source collection used for public-access Indian scanned editions embedded in the GyanSetu reader.' },
   { name: 'Digital Library of India', type: 'Indian books', url: 'https://archive.org/details/digitallibraryindia', desc: 'Large public archive of scanned Indian books in many languages hosted by the Internet Archive.' },
   { name: 'Project Gutenberg India shelf', type: 'Indian classics', url: 'https://www.gutenberg.org/ebooks/bookshelf/101', desc: 'Public-domain Indian literature and India-related classics available for free reading.' },
@@ -101,7 +129,7 @@ const app = $('#app');
 
 const author = (book) => (book.authors || []).map((person) => person.name).join(', ') || 'Unknown author';
 const cover = (book) => book.coverUrl || book.formats?.['image/jpeg'] || '';
-const pdfOf = (book) => book.pdfUrl || Object.entries(book.formats || {}).find(([type, url]) => type.includes('pdf') || String(url).toLowerCase().endsWith('.pdf'))?.[1]?.replace('http://', 'https://') || '';
+const pdfOf = (book) => book.pdfUrl || Object.entries(book.formats || {}).find(([type, url]) => /pdf/i.test(type) || String(url).toLowerCase().split('?')[0].endsWith('.pdf'))?.[1]?.replace('http://', 'https://') || '';
 const esc = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const remember = (books) => books.forEach((book) => library.set(String(book.id), book));
 
@@ -134,6 +162,61 @@ function saveProgress(book, marker = 'Opened') {
   writeJson(HISTORY_KEY, all);
 }
 
+function archiveSearchUrl(query, pageSize = 24) {
+  const params = new URLSearchParams({
+    q: query,
+    fl: 'identifier,title,creator,subject,downloads,language,description',
+    rows: pageSize,
+    page: 1,
+    output: 'json',
+    sort: 'downloads desc',
+  });
+  return `https://archive.org/advancedsearch.php?${params}`;
+}
+
+function archiveBook(doc) {
+  const id = `ia-${doc.identifier}`;
+  const creators = Array.isArray(doc.creator) ? doc.creator : doc.creator ? [doc.creator] : [];
+  const subjects = Array.isArray(doc.subject) ? doc.subject : doc.subject ? [doc.subject] : [];
+  const description = Array.isArray(doc.description) ? doc.description[0] : doc.description;
+  return {
+    id,
+    title: doc.title || doc.identifier,
+    authors: creators.map((name) => ({ name })),
+    subjects,
+    download_count: doc.downloads || 0,
+    pdfUrl: `https://archive.org/download/${doc.identifier}/${doc.identifier}.pdf`,
+    sourceUrl: `https://archive.org/details/${doc.identifier}`,
+    coverUrl: `https://archive.org/services/img/${doc.identifier}`,
+    language: Array.isArray(doc.language) ? doc.language.join(', ') : doc.language || 'Open edition',
+    desc: description || 'A free public-access scan from an open library source, opened as a complete in-site PDF whenever the source provides one.',
+    archiveIdentifier: doc.identifier,
+  };
+}
+
+async function hydrateArchivePdf(book) {
+  if (!book.archiveIdentifier || book.pdfChecked) return book;
+  book.pdfChecked = true;
+  try {
+    const response = await fetch(`https://archive.org/metadata/${book.archiveIdentifier}`);
+    if (!response.ok) return book;
+    const data = await response.json();
+    const files = data.files || [];
+    const preferred = files.find((file) => /\.pdf$/i.test(file.name) && !/_text\.pdf$/i.test(file.name)) || files.find((file) => /\.pdf$/i.test(file.name) || /pdf/i.test(file.format || ''));
+    if (preferred?.name) book.pdfUrl = `https://archive.org/download/${book.archiveIdentifier}/${encodeURIComponent(preferred.name).replace(/%2F/g, '/')}`;
+  } catch { /* Keep the predictable fallback URL so the reader can still try to open the item. */ }
+  return book;
+}
+
+async function searchArchive(query, count = 24) {
+  const response = await fetch(archiveSearchUrl(query, count));
+  if (!response.ok) throw Error('The Internet Archive PDF index could not be reached. Please try again.');
+  const data = await response.json();
+  const books = (data.response?.docs || []).map(archiveBook);
+  remember(books);
+  return books;
+}
+
 function booksUrl(query, pageSize = 24) {
   const params = new URLSearchParams({ page_size: pageSize });
   if (typeof query === 'string') params.set('search', query);
@@ -144,6 +227,8 @@ function booksUrl(query, pageSize = 24) {
 
 async function searchBooks(query, count = 24) {
   if (query?.local === 'indian-pdfs') { remember(INDIAN_PDF_BOOKS); return INDIAN_PDF_BOOKS; }
+  if (query?.archive) return searchArchive(query.archive, count);
+  if (typeof query === 'string' && /pdf|indian books|encyclopedia|comics|manga/i.test(query)) return searchArchive(`(${query}) AND mediatype:texts AND (format:pdf OR format:"Text PDF")`, count);
   const response = await fetch(booksUrl(query, count));
   if (!response.ok) throw Error('The open library index could not be reached. Please try again.');
   const data = await response.json();
@@ -155,7 +240,7 @@ async function searchBooks(query, count = 24) {
 function render() {
   remember(INDIAN_PDF_BOOKS);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  app.innerHTML = `<div class="app"><header class="topbar"><a class="brand" href="#" aria-label="GyanSetu home"><img class="brandLogo" src="src/assets/gyansetu-logo.svg" alt="GyanSetu logo"><div><b>GyanSetu</b><span>Digital Library</span></div></a><form class="search"><span>⌕</span><input id="q" placeholder="Search books, authors, subjects..."><button>Search</button></form><nav class="topActions"><button class="navBtn" id="historyBtn">History</button><button class="accountBtn" id="loginBtn">${currentUser ? `<span>${userInitials()}</span>${esc(currentUser.name)}` : 'Continue with Google'}</button><button class="iconBtn" id="theme" aria-label="Toggle theme">${dark ? '☀' : '☾'}</button></nav></header><main><section class="hero"><div class="heroText"><p class="eyebrow">✦ full-pdf Indian reading room</p><h1>Read original scanned books without leaving GyanSetu.</h1><p>Open free Indian classics as complete embedded PDFs with natural vertical scrolling, archival pages, and a professional reading desk—no page-flip animation or redirect-heavy flow.</p><div class="heroActions"><button data-search="indian-pdfs">Open PDF library</button><button class="ghost" data-search="Indian literature Tagore Premchand Ramayana Mahabharata">Search Indian classics</button></div></div><aside class="device"><div class="deviceTop">Today’s reading desk <span>Scanned editions</span></div><div class="gridMini" id="featured"></div></aside></section><section class="historyPanel" id="history"><div><p class="eyebrow">Reading history</p><h2>Pick up where you left off</h2></div><div id="historyList"></div></section><section class="resources" id="resources"></section><div id="content"></div></main></div>`;
+  app.innerHTML = `<div class="app"><header class="topbar"><a class="brand" href="#" aria-label="GyanSetu home"><img class="brandLogo" src="src/assets/gyansetu-logo.svg" alt="GyanSetu logo"><div><b>GyanSetu</b><span>Digital Library</span></div></a><form class="search"><span>⌕</span><input id="q" placeholder="Search books, authors, subjects..."><button>Search</button></form><nav class="topActions"><button class="navBtn" id="historyBtn">History</button><button class="accountBtn" id="loginBtn">${currentUser ? `<span>${userInitials()}</span>${esc(currentUser.name)}` : 'Continue with Google'}</button><button class="iconBtn" id="theme" aria-label="Toggle theme">${dark ? '☀' : '☾'}</button></nav></header><main><section class="hero"><div class="heroText"><p class="eyebrow">✦ full-pdf Indian reading room</p><h1>Read original scanned books without leaving GyanSetu.</h1><p>Open free books from open libraries—Indian books, encyclopedias, comics, manga, classics, and more—as complete embedded PDFs with natural vertical scrolling, archival pages, and a professional reading desk—no page-flip animation or redirect-heavy flow.</p><div class="heroActions"><button data-search="indian-pdfs">Open PDF library</button><button class="ghost" data-search="Indian books pdf encyclopedia comics manga">Search all open PDFs</button></div></div><aside class="device"><div class="deviceTop">Today’s reading desk <span>Scanned editions</span></div><div class="gridMini" id="featured"></div></aside></section><section class="historyPanel" id="history"><div><p class="eyebrow">Reading history</p><h2>Pick up where you left off</h2></div><div id="historyList"></div></section><section class="resources" id="resources"></section><div id="content"></div></main></div>`;
   $('#theme').onclick = () => { dark = !dark; render(); };
   $('#loginBtn').onclick = loginFlow;
   $('#historyBtn').onclick = () => $('#history').scrollIntoView({ behavior: 'smooth' });
@@ -177,7 +262,11 @@ function loginFlow() {
 
 function renderResources() {
   const box = $('#resources');
-  box.innerHTML = `<div class="sectionHead"><div><p class="eyebrow">Free & open collections</p><h2>Sources for in-site PDFs</h2></div><span>Books open inside GyanSetu</span></div><div class="resourceGrid">${RESOURCE_LINKS.map((item) => `<a class="resourceCard" href="${item.url}" target="_blank" rel="noopener"><small>${esc(item.type)}</small><b>${esc(item.name)}</b><span>${esc(item.desc)}</span></a>`).join('')}</div>`;
+  box.innerHTML = `<div class="sectionHead"><div><p class="eyebrow">Free & open collections</p><h2>Sources for in-site PDFs</h2></div><span>Searches fetch PDFs from open catalogues</span></div><div class="resourceGrid">${RESOURCE_LINKS.map((item) => `<a class="resourceCard" href="${item.url}" target="_blank" rel="noopener"><small>${esc(item.type)}</small><b>${esc(item.name)}</b><span>${esc(item.desc)}</span></a>`).join('')}</div>`;
+}
+
+function sourceLink(book) {
+  return book.sourceUrl ? `<a class="sourceLink" href="${book.sourceUrl}" target="_blank" rel="noopener">Source record</a>` : '';
 }
 
 function renderHistory() {
@@ -212,7 +301,7 @@ function showShelves() {
 }
 
 async function showResults(query) {
-  const label = query?.local === 'indian-pdfs' ? 'Indian PDF library' : typeof query === 'string' ? query : query.topic || query.search;
+  const label = query?.local === 'indian-pdfs' ? 'Indian PDF library' : query?.archive ? 'Open-library PDF collection' : typeof query === 'string' ? query : query.topic || query.search;
   const content = $('#content');
   content.innerHTML = `<section class="shelf"><div class="sectionHead"><h2>Results for “${esc(label)}”</h2></div><div class="rule"></div><div class="loader">◌ Searching open books…</div></section>`;
   try {
@@ -225,13 +314,14 @@ async function showResults(query) {
 function openDetails(book) {
   if (!book) return;
   const hasPdf = Boolean(pdfOf(book));
-  document.body.insertAdjacentHTML('beforeend', `<div class="modal" role="dialog" aria-modal="true"><div class="details"><button class="close" aria-label="Close details">×</button><div class="detailCover">${cover(book) ? `<img src="${cover(book)}" alt="">` : `<span>${esc(book.title)}</span>`}</div><div><p class="eyebrow">★ ${hasPdf ? 'Embedded PDF edition' : 'Open book details'}</p><h2>${esc(book.title)}</h2><p class="byline">${esc(author(book))}</p><p class="desc">${esc(book.desc || (hasPdf ? 'Read the full PDF scan directly inside GyanSetu with vertical scrolling and the original page look.' : 'This title is available through the open catalogue. PDF availability depends on the source edition.'))}</p><dl><dt>Subjects</dt><dd>${esc((book.subjects || []).slice(0, 4).join(' · ') || 'Classic literature')}</dd><dt>Language</dt><dd>${esc(book.language || (book.languages || []).join(', ') || 'Open edition')}</dd><dt>Format</dt><dd>${hasPdf ? 'Complete scrollable PDF' : 'Catalogue edition'}</dd></dl><button class="primary">${hasPdf ? '📖 Read PDF in GyanSetu' : '📖 Open reader'}</button></div></div></div>`);
+  document.body.insertAdjacentHTML('beforeend', `<div class="modal" role="dialog" aria-modal="true"><div class="details"><button class="close" aria-label="Close details">×</button><div class="detailCover">${cover(book) ? `<img src="${cover(book)}" alt="">` : `<span>${esc(book.title)}</span>`}</div><div><p class="eyebrow">★ ${hasPdf ? 'Embedded PDF edition' : 'Open book details'}</p><h2>${esc(book.title)}</h2><p class="byline">${esc(author(book))}</p><p class="desc">${esc(book.desc || (hasPdf ? 'Read the full PDF scan directly inside GyanSetu with vertical scrolling and the original page look.' : 'This title is available through the open catalogue. PDF availability depends on the source edition.'))}</p><dl><dt>Subjects</dt><dd>${esc((book.subjects || []).slice(0, 4).join(' · ') || 'Classic literature')}</dd><dt>Language</dt><dd>${esc(book.language || (book.languages || []).join(', ') || 'Open edition')}</dd><dt>Format</dt><dd>${hasPdf ? 'Complete scrollable PDF' : 'Catalogue edition'}</dd></dl>${sourceLink(book)}<button class="primary">${hasPdf ? '📖 Read PDF in GyanSetu' : '📖 Open reader'}</button></div></div></div>`);
   $('.close').onclick = () => $('.modal').remove();
   $('.modal').onclick = (event) => { if (event.target.classList.contains('modal')) event.target.remove(); };
   $('.primary').onclick = () => { $('.modal').remove(); hasPdf ? openPdfReader(book) : openTextFallback(book); };
 }
 
-function openPdfReader(book) {
+async function openPdfReader(book) {
+  await hydrateArchivePdf(book);
   const pdfUrl = pdfOf(book);
   saveProgress(book, 'PDF opened');
   document.body.insertAdjacentHTML('beforeend', `<section class="reader" role="dialog" aria-modal="true"><div class="readerShell pdfShell"><div class="readerTop"><div><small>Original scanned PDF</small><b>${esc(book.title)}</b></div><button id="rclose" aria-label="Close reader">×</button></div><div class="pdfToolbar"><span>Scroll naturally to read the complete book inside GyanSetu.</span><a href="${pdfUrl}" download target="_blank" rel="noopener">Download PDF</a></div><iframe class="pdfFrame" title="${esc(book.title)} PDF" src="${pdfUrl}#toolbar=1&navpanes=0&view=FitH"></iframe></div></section>`);
