@@ -21,8 +21,16 @@
     return img.closest('article, li, [class*="book-card"], [class*="bookCard"], [class*="book-item"], [class*="bookItem"], [class*="card"]') || img.parentElement?.parentElement || img.parentElement;
   }
 
+  function isBookCard(card) {
+    if (!card) return false;
+    const text = cleanText(card.innerText || '');
+    return /read\s*(book|\/\s*download)|read\s*\/\s*download/i.test(text);
+  }
+
   function findBookDetails(img) {
     const card = findCard(img);
+    if (!isBookCard(card)) return { title: '', author: '', card };
+
     const alt = cleanText(img.getAttribute('alt'));
     const dataTitle = cleanText(img.dataset.bookTitle || img.getAttribute('data-book-title'));
     const heading = card?.querySelector('h1, h2, h3, h4, h5, h6, [class*="title"], [class*="book-title"]');
