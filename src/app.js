@@ -131,56 +131,36 @@ FREE_PDF_BOOKS.push(...SHAYARI_AND_ROMANCE_BOOKS);
 
 // ---------------------------------------------------------------------
 // MORE_BOOKS — additional curated public-domain / open-access titles.
-// Adds real Project Gutenberg entries across genres already used by
-// SHELVES, so the curated shelf count grows without touching the
-// Gutendex/dynamic search path.
 // ---------------------------------------------------------------------
 const MORE_BOOKS = [
-  // Fiction, Classics & Literature
   { id: 'gutenberg-great-expectations', title: 'Great Expectations', authors: [{ name: 'Charles Dickens' }], subjects: ['Fiction', 'Classics', 'Coming of age', 'Public domain'], genre: 'Fiction, Classics & Literature', download_count: 50000, readUrl: 'https://www.gutenberg.org/ebooks/1400.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/1400', language: 'English', desc: 'Dickens’s coming-of-age classic in a reliable public-domain reader.' },
   { id: 'gutenberg-david-copperfield', title: 'David Copperfield', authors: [{ name: 'Charles Dickens' }], subjects: ['Fiction', 'Classics', 'Public domain'], genre: 'Fiction, Classics & Literature', download_count: 42000, readUrl: 'https://www.gutenberg.org/ebooks/766.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/766', language: 'English', desc: 'One of Dickens’s most personal novels, in an open online edition.' },
   { id: 'gutenberg-oliver-twist', title: 'Oliver Twist', authors: [{ name: 'Charles Dickens' }], subjects: ['Fiction', 'Classics', 'Social commentary', 'Public domain'], genre: 'Fiction, Classics & Literature', download_count: 40500, readUrl: 'https://www.gutenberg.org/ebooks/730.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/730', language: 'English', desc: 'Dickens’s classic on poverty and resilience, free to read online.' },
   { id: 'gutenberg-christmas-carol', title: 'A Christmas Carol', authors: [{ name: 'Charles Dickens' }], subjects: ['Fiction', 'Classics', 'Holiday', 'Public domain'], genre: 'Fiction, Classics & Literature', download_count: 46000, readUrl: 'https://www.gutenberg.org/ebooks/46.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/46', language: 'English', desc: 'Dickens’s beloved novella of redemption, in a free public-domain edition.' },
   { id: 'gutenberg-leaves-of-grass', title: 'Leaves of Grass', authors: [{ name: 'Walt Whitman' }], subjects: ['Poetry', 'American literature', 'Public domain'], genre: 'Poetry', download_count: 28500, readUrl: 'https://www.gutenberg.org/ebooks/1322.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/1322', language: 'English', desc: 'Whitman’s landmark poetry collection in an open web edition.' },
   { id: 'gutenberg-raven-poe', title: 'The Raven and Other Poems', authors: [{ name: 'Edgar Allan Poe' }], subjects: ['Poetry', 'Gothic', 'Public domain'], genre: 'Poetry', download_count: 27000, readUrl: 'https://www.gutenberg.org/ebooks/25525.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/25525', language: 'English', desc: 'Poe’s celebrated poetry collection, freely readable online.' },
-
-  // Mystery & Detective
   { id: 'gutenberg-tell-tale-heart', title: 'The Tell-Tale Heart and Other Stories', authors: [{ name: 'Edgar Allan Poe' }], subjects: ['Mystery', 'Horror', 'Short stories', 'Public domain'], genre: 'Mystery & Detective', download_count: 33500, readUrl: 'https://www.gutenberg.org/ebooks/2148.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/2148', language: 'English', desc: 'Poe’s tense psychological tales, free in Project Gutenberg’s reader.' },
   { id: 'gutenberg-moonstone', title: 'The Moonstone', authors: [{ name: 'Wilkie Collins' }], subjects: ['Mystery', 'Detective fiction', 'Classics', 'Public domain'], genre: 'Mystery & Detective', download_count: 25500, readUrl: 'https://www.gutenberg.org/ebooks/155.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/155', language: 'English', desc: 'Often called the first English detective novel, free to read online.' },
-
-  // Adventure
   { id: 'gutenberg-count-monte-cristo', title: 'The Count of Monte Cristo', authors: [{ name: 'Alexandre Dumas' }], subjects: ['Adventure', 'Classics', 'Revenge', 'Public domain'], genre: 'Adventure', download_count: 44000, readUrl: 'https://www.gutenberg.org/ebooks/1184.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/1184', language: 'English', desc: 'Dumas’s epic tale of revenge and redemption, free online.' },
   { id: 'gutenberg-three-musketeers', title: 'The Three Musketeers', authors: [{ name: 'Alexandre Dumas' }], subjects: ['Adventure', 'Classics', 'Public domain'], genre: 'Adventure', download_count: 41000, readUrl: 'https://www.gutenberg.org/ebooks/1257.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/1257', language: 'English', desc: 'A swashbuckling adventure classic in a public-domain online edition.' },
   { id: 'gutenberg-robinson-crusoe', title: 'Robinson Crusoe', authors: [{ name: 'Daniel Defoe' }], subjects: ['Adventure', 'Classics', 'Survival', 'Public domain'], genre: 'Adventure', download_count: 39500, readUrl: 'https://www.gutenberg.org/ebooks/521.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/521', language: 'English', desc: 'The classic castaway adventure, free in Project Gutenberg’s reader.' },
   { id: 'gutenberg-gullivers-travels', title: "Gulliver's Travels", authors: [{ name: 'Jonathan Swift' }], subjects: ['Adventure', 'Satire', 'Classics', 'Public domain'], genre: 'Adventure', download_count: 38000, readUrl: 'https://www.gutenberg.org/ebooks/829.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/829', language: 'English', desc: 'Swift’s satirical travel adventure, free to read online.' },
   { id: 'gutenberg-around-the-world-80', title: 'Around the World in Eighty Days', authors: [{ name: 'Jules Verne' }], subjects: ['Adventure', 'Travel', 'Classics', 'Public domain'], genre: 'Adventure', download_count: 37500, readUrl: 'https://www.gutenberg.org/ebooks/103.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/103', language: 'English', desc: 'Verne’s classic race-against-time adventure, free online.' },
-
-  // Science Fiction & Fantasy
   { id: 'gutenberg-20000-leagues', title: 'Twenty Thousand Leagues Under the Sea', authors: [{ name: 'Jules Verne' }], subjects: ['Science fiction', 'Adventure', 'Classics', 'Public domain'], genre: 'Science Fiction & Fantasy', download_count: 40000, readUrl: 'https://www.gutenberg.org/ebooks/164.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/164', language: 'English', desc: 'Verne’s undersea science-fiction classic, free to read online.' },
   { id: 'gutenberg-war-of-worlds', title: 'The War of the Worlds', authors: [{ name: 'H. G. Wells' }], subjects: ['Science fiction', 'Classics', 'Public domain'], genre: 'Science Fiction & Fantasy', download_count: 43000, readUrl: 'https://www.gutenberg.org/ebooks/36.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/36', language: 'English', desc: 'Wells’s alien-invasion classic, freely available online.' },
   { id: 'gutenberg-journey-center-earth', title: 'A Journey to the Centre of the Earth', authors: [{ name: 'Jules Verne' }], subjects: ['Science fiction', 'Adventure', 'Classics', 'Public domain'], genre: 'Science Fiction & Fantasy', download_count: 32000, readUrl: 'https://www.gutenberg.org/ebooks/3748.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/3748', language: 'English', desc: 'Verne’s subterranean adventure classic, free to read online.' },
-
-  // Storybooks & Children
   { id: 'gutenberg-peter-pan', title: 'Peter Pan', authors: [{ name: 'J. M. Barrie' }], subjects: ['Children', 'Fantasy', 'Classics', 'Public domain'], genre: 'Storybooks & Children', download_count: 41500, readUrl: 'https://www.gutenberg.org/ebooks/16.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/16', language: 'English', desc: 'The boy who never grew up, in a free public-domain edition.' },
   { id: 'gutenberg-jungle-book', title: 'The Jungle Book', authors: [{ name: 'Rudyard Kipling' }], subjects: ['Children', 'Adventure', 'Classics', 'Public domain'], genre: 'Storybooks & Children', download_count: 39000, readUrl: 'https://www.gutenberg.org/ebooks/236.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/236', language: 'English', desc: 'Kipling’s classic jungle tales, free to read online.' },
   { id: 'gutenberg-wind-willows', title: 'The Wind in the Willows', authors: [{ name: 'Kenneth Grahame' }], subjects: ['Children', 'Classics', 'Public domain'], genre: 'Storybooks & Children', download_count: 36500, readUrl: 'https://www.gutenberg.org/ebooks/289.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/289', language: 'English', desc: 'A gentle riverbank classic, free in a public-domain online edition.' },
   { id: 'gutenberg-aesops-fables', title: "Aesop's Fables", authors: [{ name: 'Aesop' }], subjects: ['Children', 'Fables', 'Classics', 'Public domain'], genre: 'Storybooks & Children', download_count: 34500, readUrl: 'https://www.gutenberg.org/ebooks/21.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/21', language: 'English', desc: 'Timeless short fables with morals, free to read online.' },
-
-  // Philosophy, Religion & Ideas
   { id: 'gutenberg-meditations', title: 'Meditations', authors: [{ name: 'Marcus Aurelius' }], subjects: ['Philosophy', 'Stoicism', 'Classics', 'Public domain'], genre: 'Philosophy, Religion & Ideas', download_count: 30500, readUrl: 'https://www.gutenberg.org/ebooks/2680.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/2680', language: 'English', desc: 'The Stoic emperor’s personal reflections, free to read online.' },
   { id: 'gutenberg-republic-plato', title: 'The Republic', authors: [{ name: 'Plato' }], subjects: ['Philosophy', 'Classics', 'Public domain'], genre: 'Philosophy, Religion & Ideas', download_count: 29500, readUrl: 'https://www.gutenberg.org/ebooks/1497.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/1497', language: 'English', desc: 'Plato’s foundational work on justice and the ideal state, free online.' },
   { id: 'gutenberg-prince-machiavelli', title: 'The Prince', authors: [{ name: 'Niccolò Machiavelli' }], subjects: ['Philosophy', 'Political theory', 'Classics', 'Public domain'], genre: 'Philosophy, Religion & Ideas', download_count: 27500, readUrl: 'https://www.gutenberg.org/ebooks/1232.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/1232', language: 'English', desc: 'Machiavelli’s treatise on power and leadership, free to read online.' },
-
-  // History, Biography & Travel
   { id: 'gutenberg-origin-of-species', title: 'On the Origin of Species', authors: [{ name: 'Charles Darwin' }], subjects: ['Science', 'History of ideas', 'Classics', 'Public domain'], genre: 'History, Biography & Travel', download_count: 31500, readUrl: 'https://www.gutenberg.org/ebooks/1228.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/1228', language: 'English', desc: 'Darwin’s landmark work on evolution, free to read online.' },
   { id: 'gutenberg-wealth-of-nations', title: 'The Wealth of Nations', authors: [{ name: 'Adam Smith' }], subjects: ['Economics', 'History', 'Classics', 'Public domain'], genre: 'History, Biography & Travel', download_count: 26500, readUrl: 'https://www.gutenberg.org/ebooks/3300.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/3300', language: 'English', desc: 'The foundational economics text, free in an online reader.' },
   { id: 'gutenberg-common-sense', title: 'Common Sense', authors: [{ name: 'Thomas Paine' }], subjects: ['History', 'Political philosophy', 'Classics', 'Public domain'], genre: 'History, Biography & Travel', download_count: 24500, readUrl: 'https://www.gutenberg.org/ebooks/147.html.images', coverUrl: '', sourceName: 'Project Gutenberg', sourceUrl: 'https://www.gutenberg.org/ebooks/147', language: 'English', desc: 'Paine’s revolutionary pamphlet, free to read online.' },
-
-  // Science, Math & Technology
   { id: 'openstax-anatomy-physiology', title: 'Anatomy and Physiology 2e', authors: [{ name: 'OpenStax' }], subjects: ['Biology', 'Anatomy', 'Textbook', 'CC BY'], genre: 'Science, Math & Technology', download_count: 28500, pdfUrl: 'https://assets.openstax.org/oscms-prodcms/media/documents/AnatomyPhysiology2e-WEB.pdf', coverUrl: '', sourceName: 'OpenStax', sourceUrl: 'https://openstax.org/details/books/anatomy-and-physiology-2e', language: 'English', desc: 'An openly licensed anatomy and physiology textbook from OpenStax.' },
   { id: 'openstax-precalculus', title: 'Precalculus 2e', authors: [{ name: 'OpenStax' }], subjects: ['Mathematics', 'Precalculus', 'Textbook', 'CC BY'], genre: 'Science, Math & Technology', download_count: 26000, pdfUrl: 'https://assets.openstax.org/oscms-prodcms/media/documents/Precalculus2e-WEB.pdf', coverUrl: '', sourceName: 'OpenStax', sourceUrl: 'https://openstax.org/details/books/precalculus-2e', language: 'English', desc: 'A free precalculus textbook covering functions, trigonometry, and more.' },
-
-  // Academic & Research
   { id: 'doab-open-access', title: 'DOAB Open Access Book Directory', authors: [{ name: 'Directory of Open Access Books' }], subjects: ['Academic books', 'Open access', 'Multi-discipline'], genre: 'Academic & Research', download_count: 22000, readUrl: 'https://www.doabooks.org/', coverUrl: '', sourceName: 'DOAB', sourceUrl: 'https://www.doabooks.org/', language: 'Multiple languages', desc: 'A discovery service for peer-reviewed open-access academic books across disciplines.' },
   { id: 'oapen-library', title: 'OAPEN Open Access Library', authors: [{ name: 'OAPEN Foundation' }], subjects: ['Academic books', 'Open access', 'Humanities', 'Social science'], genre: 'Academic & Research', download_count: 21000, readUrl: 'https://www.oapen.org/', coverUrl: '', sourceName: 'OAPEN', sourceUrl: 'https://www.oapen.org/', language: 'Multiple languages', desc: 'A library of open-access books, mainly in humanities and social sciences.' }
 ];
@@ -189,22 +169,22 @@ FREE_PDF_BOOKS.push(...MORE_BOOKS);
 
 
 const SHELVES = [
-  ['Indian Open PDFs', { genre: 'Indian', searchTerms: ['india', 'tagore', 'gandhi', 'gita'] }],
-  ['Fiction, Classics & Literature', { genre: 'Fiction, Classics & Literature', searchTerms: ['classic literature', 'dickens', 'austen', 'twain'] }],
-  ['Adventure', { genre: 'Adventure', searchTerms: ['adventure', 'sea stories', 'verne', 'stevenson'] }],
-  ['Mystery & Detective', { genre: 'Mystery & Detective', searchTerms: ['detective', 'mystery', 'sherlock', 'poe'] }],
-  ['Romance & Love Stories', { genre: 'Romance', searchTerms: ['romance', 'love stories', 'austen', 'classic romance novels'] }],
-  ['Shayari & Punjabi Poetry', { genre: 'Shayari & Punjabi Poetry', searchTerms: ['shayari', 'ghazal', 'punjabi poetry', 'heer waris shah'] }],
-  ['Science Fiction & Fantasy', { genre: 'Science Fiction & Fantasy', searchTerms: ['science fiction', 'fantasy', 'wells', 'gothic'] }],
-  ['Poetry', { genre: 'Poetry', searchTerms: ['poetry', 'poems', 'shakespeare sonnets', 'tagore'] }],
-  ['Storybooks & Children', { genre: 'Storybooks & Children', searchTerms: ['children', 'fairy tales', 'wonderland', 'school stories'] }],
-  ['Comics & Graphic Novels', { genre: 'Comics & Graphic Novels', searchTerms: ['comics', 'graphic novels', 'comic book', 'sequential art'] }],
-  ['Manga & Webcomics', { genre: 'Manga & Webcomics', searchTerms: ['manga', 'webcomics', 'graphic stories', 'comic chapters'] }],
-  ['Encyclopedias & Reference', { genre: 'Encyclopedias & Reference', searchTerms: ['encyclopedia', 'reference', 'world history', 'wikibooks'] }],
-  ['Academic & Research', { genre: 'Academic & Research', searchTerms: ['open access books', 'research books', 'academic books', 'intechopen'] }],
-  ['Science, Math & Technology', { genre: 'Science, Math & Technology', searchTerms: ['science textbook', 'mathematics', 'physics', 'biology'] }],
-  ['History, Biography & Travel', { genre: 'History, Biography & Travel', searchTerms: ['history', 'biography', 'travel', 'war'] }],
-  ['Philosophy, Religion & Ideas', { genre: 'Philosophy, Religion & Ideas', searchTerms: ['philosophy', 'religion', 'ethics', 'gita'] }]
+  ['Indian Open PDFs', { genre: 'Indian', searchTerms: ['india', 'tagore', 'gandhi', 'gita', 'sanskrit', 'vedanta'] }],
+  ['Fiction, Classics & Literature', { genre: 'Fiction, Classics & Literature', searchTerms: ['classic literature', 'dickens', 'austen', 'twain', 'kafka', 'wilde'] }],
+  ['Adventure', { genre: 'Adventure', searchTerms: ['adventure', 'sea stories', 'verne', 'stevenson', 'dumas', 'exploration'] }],
+  ['Mystery & Detective', { genre: 'Mystery & Detective', searchTerms: ['detective', 'mystery', 'sherlock', 'poe', 'crime fiction', 'thriller'] }],
+  ['Romance & Love Stories', { genre: 'Romance', searchTerms: ['romance', 'love stories', 'austen', 'classic romance novels', 'bronte', 'courtship'] }],
+  ['Shayari & Punjabi Poetry', { genre: 'Shayari & Punjabi Poetry', searchTerms: ['shayari', 'ghazal', 'punjabi poetry', 'heer waris shah', 'urdu poetry', 'nazm'] }],
+  ['Science Fiction & Fantasy', { genre: 'Science Fiction & Fantasy', searchTerms: ['science fiction', 'fantasy', 'wells', 'gothic', 'utopia', 'space travel'] }],
+  ['Poetry', { genre: 'Poetry', searchTerms: ['poetry', 'poems', 'shakespeare sonnets', 'tagore', 'whitman', 'romantic poets'] }],
+  ["Storybooks & Children", { genre: 'Storybooks & Children', searchTerms: ['children', 'fairy tales', 'wonderland', 'school stories', 'fables', 'bedtime stories'] }],
+  ['Comics & Graphic Novels', { genre: 'Comics & Graphic Novels', searchTerms: ['comics', 'graphic novels', 'comic book', 'sequential art', 'golden age comics', 'superhero comics'] }],
+  ['Manga & Webcomics', { genre: 'Manga & Webcomics', searchTerms: ['manga', 'webcomics', 'graphic stories', 'comic chapters', 'shonen', 'seinen'] }],
+  ['Encyclopedias & Reference', { genre: 'Encyclopedias & Reference', searchTerms: ['encyclopedia', 'reference', 'world history', 'wikibooks', 'dictionary', 'almanac'] }],
+  ['Academic & Research', { genre: 'Academic & Research', searchTerms: ['open access books', 'research books', 'academic books', 'intechopen', 'scholarly monograph', 'university press'] }],
+  ['Science, Math & Technology', { genre: 'Science, Math & Technology', searchTerms: ['science textbook', 'mathematics', 'physics', 'biology', 'chemistry', 'engineering'] }],
+  ['History, Biography & Travel', { genre: 'History, Biography & Travel', searchTerms: ['history', 'biography', 'travel', 'war', 'memoir', 'ancient civilization'] }],
+  ['Philosophy, Religion & Ideas', { genre: 'Philosophy, Religion & Ideas', searchTerms: ['philosophy', 'religion', 'ethics', 'gita', 'stoicism', 'theology'] }]
 ];
 
 const RESOURCE_LINKS = [
@@ -266,7 +246,27 @@ function genreMatch(book, genre) {
 
 function sortBooks(books) { return [...books].sort((a, b) => (b.download_count || 0) - (a.download_count || 0) || a.title.localeCompare(b.title)); }
 
-async function searchGutendex(term, count = 40) {
+// Shared mapper: raw Gutendex API doc -> this app's book shape
+function mapGutendexDoc(doc) {
+  return {
+    id: `gb-${doc.id}`,
+    title: doc.title || 'Untitled',
+    authors: (doc.authors || []).map((person) => ({ name: person.name })),
+    subjects: [...(doc.subjects || []), ...(doc.bookshelves || []), 'Project Gutenberg'],
+    genre: 'Fiction, Classics & Literature',
+    download_count: doc.download_count || 0,
+    pdfUrl: doc.formats?.['application/pdf'] || '',
+    coverUrl: doc.formats?.['image/jpeg'] || '',
+    sourceName: 'Project Gutenberg',
+    sourceUrl: `https://www.gutenberg.org/ebooks/${doc.id}`,
+    readUrl: doc.formats?.['text/html; charset=utf-8'] || doc.formats?.['text/html'] || `https://www.gutenberg.org/ebooks/${doc.id}.html.images`,
+    language: (doc.languages || []).join(', ') || 'Open edition',
+    desc: 'A public-domain book from Project Gutenberg with a direct PDF format.'
+  };
+}
+
+// count default raised 40 -> 100 so each shelf/term pulls a much deeper slice of Gutenberg
+async function searchGutendex(term, count = 100) {
   if (!term) return [];
   const cacheKey = `gutendex.${term}.${count}`;
   const cached = cachedBooks(cacheKey);
@@ -276,29 +276,79 @@ async function searchGutendex(term, count = 40) {
     const response = await fetch(`https://gutendex.com/books/?${params}`);
     if (!response.ok) return [];
     const data = await response.json();
-    const books = (data.results || []).map((doc) => ({ id: `gb-${doc.id}`, title: doc.title || 'Untitled', authors: (doc.authors || []).map((person) => ({ name: person.name })), subjects: [...(doc.subjects || []), ...(doc.bookshelves || []), 'Project Gutenberg'], genre: 'Fiction, Classics & Literature', download_count: doc.download_count || 0, pdfUrl: doc.formats?.['application/pdf'] || '', coverUrl: doc.formats?.['image/jpeg'] || '', sourceName: 'Project Gutenberg', sourceUrl: `https://www.gutenberg.org/ebooks/${doc.id}`, readUrl: doc.formats?.['text/html; charset=utf-8'] || doc.formats?.['text/html'] || `https://www.gutenberg.org/ebooks/${doc.id}.html.images`, language: (doc.languages || []).join(', ') || 'Open edition', desc: 'A public-domain book from Project Gutenberg with a direct PDF format.' })).filter((book) => readableOf(book)).slice(0, count);
+    const books = (data.results || []).map(mapGutendexDoc).filter((book) => readableOf(book)).slice(0, count);
     cacheBooks(cacheKey, books); remember(books); return books;
   } catch { return []; }
 }
 
-async function searchBooks(query, count = 24) {
+// count default raised 24 -> 60; now fans out across up to 8 search terms (was 4) with a higher per-term floor
+async function searchBooks(query, count = 60) {
   const term = typeof query === 'string' ? query : query?.search || '';
   const base = query?.genre ? FREE_PDF_BOOKS.filter((book) => genreMatch(book, query.genre)) : FREE_PDF_BOOKS.filter((book) => !term || `${book.title} ${author(book)} ${(book.subjects || []).join(' ')}`.toLowerCase().includes(term.toLowerCase()));
   const searchTerms = query?.searchTerms || (term ? [term] : []);
-  const gutendexGroups = await Promise.all(searchTerms.slice(0, 4).map((searchTerm) => searchGutendex(searchTerm, Math.max(8, Math.ceil(count / 2)))));
+  const gutendexGroups = await Promise.all(searchTerms.slice(0, 8).map((searchTerm) => searchGutendex(searchTerm, Math.max(20, Math.ceil(count / 2)))));
   const gutendex = gutendexGroups.flat().map((book) => query?.genre ? { ...book, genre: query.genre } : book);
   const seen = new Set();
   const merged = sortBooks([...base, ...gutendex].filter((book) => readableOf(book) && !/archive\.org|openlibrary\.org/i.test(readableOf(book)) && !seen.has(book.id) && seen.add(book.id))).slice(0, count);
   remember(merged); return merged;
 }
 
+// ---------------------------------------------------------------------
+// Browse All Books — paginates the entire live Gutendex catalog
+// (~75,000+ books) directly, instead of routing through keyword search.
+// This is the actual path to "500+" / "all 70k+" books: nothing is
+// hardcoded, pages are fetched on demand as the user clicks Load more.
+// ---------------------------------------------------------------------
+let browseState = { nextUrl: 'https://gutendex.com/books/?page=1', loading: false, loaded: 0, total: 0 };
+
+async function fetchBrowsePage() {
+  if (browseState.loading || !browseState.nextUrl) return;
+  browseState.loading = true;
+  const btn = $('#browseMoreBtn');
+  const status = $('#browseStatus');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = 'Loading…';
+  try {
+    const response = await fetch(browseState.nextUrl);
+    if (!response.ok) throw new Error('Could not reach Gutendex right now.');
+    const data = await response.json();
+    const books = (data.results || [])
+      .map(mapGutendexDoc)
+      .filter((book) => readableOf(book) && !/archive\.org|openlibrary\.org/i.test(readableOf(book)));
+    remember(books);
+    const grid = $('#browseGrid');
+    if (grid) grid.insertAdjacentHTML('beforeend', books.map(bookCard).join(''));
+    browseState.nextUrl = data.next;
+    browseState.loaded += books.length;
+    browseState.total = data.count || browseState.total;
+    if (status) status.textContent = `Loaded ${browseState.loaded.toLocaleString()} of ${browseState.total.toLocaleString()} books`;
+    if (!browseState.nextUrl && btn) { btn.remove(); if (status) status.textContent += ' — that’s the full catalog.'; }
+  } catch (error) {
+    if (status) status.textContent = esc(error.message);
+  } finally {
+    browseState.loading = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function showBrowseAll() {
+  browseState = { nextUrl: 'https://gutendex.com/books/?page=1', loading: false, loaded: 0, total: 0 };
+  const content = $('#content');
+  content.innerHTML = `<section class="shelf"><div class="sectionHead"><h2>Browse All Books</h2><span>Streaming Project Gutenberg’s full catalog — nothing is preloaded</span></div><div class="rule"></div><div class="results" id="browseGrid"></div><button class="read" id="browseMoreBtn" style="margin:20px auto;display:block">Load more</button><p class="muted" id="browseStatus" style="text-align:center"></p></section>`;
+  $('#browseMoreBtn').onclick = fetchBrowsePage;
+  content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  fetchBrowsePage();
+}
+
 function render() {
   remember(FREE_PDF_BOOKS);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  app.innerHTML = `<div class="app"><header class="topbar"><a class="brand" href="#" aria-label="GyanSetu home"><img class="brandLogo" src="src/assets/gyansetu-logo.svg" alt="GyanSetu logo"><div><b>GyanSetu</b><span>Digital Library</span></div></a><form class="search"><span>⌕</span><input id="q" placeholder="Search shayari, romantic novels, comics, storybooks..."><button>Search</button></form><nav class="topActions"><button class="navBtn" id="historyBtn">History</button><button class="accountBtn" id="loginBtn">${currentUser ? `<span>${userInitials()}</span>${esc(currentUser.name)}` : 'Continue with Google'}</button><button class="iconBtn" id="theme" aria-label="Toggle theme">${dark ? '☀' : '☾'}</button></nav></header><main><section class="hero"><div class="heroText"><p class="eyebrow">✦ open web reading room</p><h1>Read free books without broken links.</h1><p>GyanSetu now includes every major reading lane: shayari, Punjabi poetry, romantic novels, comics, manga, storybooks, encyclopedias, reference works, textbooks, classics, and research books from legal open-web or official free sources.</p><div class="heroActions"><button data-search="Indian">Open Indian books</button><button class="ghost" data-search="shayari romantic novels comics storybooks">Explore all types</button></div></div><aside class="device"><div class="deviceTop">Fast reading desk <span>Reliable links</span></div><div class="gridMini" id="featured"></div></aside></section><section class="historyPanel" id="history"><div><p class="eyebrow">Reading history</p><h2>Pick up where you left off</h2></div><div id="historyList"></div></section><section class="resources" id="resources"></section><div id="content"></div></main></div>`;
+  app.innerHTML = `<div class="app"><header class="topbar"><a class="brand" href="#" aria-label="GyanSetu home"><img class="brandLogo" src="src/assets/gyansetu-logo.svg" alt="GyanSetu logo"><div><b>GyanSetu</b><span>Digital Library</span></div></a><form class="search"><span>⌕</span><input id="q" placeholder="Search shayari, romantic novels, comics, storybooks..."><button>Search</button></form><nav class="topActions"><button class="navBtn" id="browseAllBtn">Browse All</button><button class="navBtn" id="historyBtn">History</button><button class="accountBtn" id="loginBtn">${currentUser ? `<span>${userInitials()}</span>${esc(currentUser.name)}` : 'Continue with Google'}</button><button class="iconBtn" id="theme" aria-label="Toggle theme">${dark ? '☀' : '☾'}</button></nav></header><main><section class="hero"><div class="heroText"><p class="eyebrow">✦ open web reading room</p><h1>Read free books without broken links.</h1><p>GyanSetu now includes every major reading lane: shayari, Punjabi poetry, romantic novels, comics, manga, storybooks, encyclopedias, reference works, textbooks, classics, and research books from legal open-web or official free sources — plus a Browse All mode that pages through Project Gutenberg’s entire live catalog.</p><div class="heroActions"><button data-search="Indian">Open Indian books</button><button class="ghost" id="heroBrowseAll">Browse all 70,000+ books</button></div></div><aside class="device"><div class="deviceTop">Fast reading desk <span>Reliable links</span></div><div class="gridMini" id="featured"></div></aside></section><section class="historyPanel" id="history"><div><p class="eyebrow">Reading history</p><h2>Pick up where you left off</h2></div><div id="historyList"></div></section><section class="resources" id="resources"></section><div id="content"></div></main></div>`;
   $('#theme').onclick = () => { dark = !dark; render(); };
   $('#loginBtn').onclick = loginFlow;
   $('#historyBtn').onclick = () => $('#history').scrollIntoView({ behavior: 'smooth' });
+  $('#browseAllBtn').onclick = showBrowseAll;
+  $('#heroBrowseAll').onclick = showBrowseAll;
   $('.search').onsubmit = (event) => { event.preventDefault(); showResults($('#q').value.trim() || 'classic literature'); };
   document.querySelectorAll('[data-search]').forEach((button) => { button.onclick = () => showResults(button.dataset.search); });
   app.onclick = (event) => { const cardButton = event.target.closest('[data-id]'); if (cardButton) openDetails(library.get(cardButton.dataset.id)); };
@@ -338,19 +388,21 @@ function loadFeatured() {
   $('#featured').innerHTML = featured.map((book) => `<button data-id="${book.id}" aria-label="View ${esc(book.title)}">${cover(book) ? `<img loading="lazy" decoding="async" src="${cover(book)}" alt="">` : placeholderCover(book)}<small>${formatOf(book)}</small></button>`).join('');
 }
 
+// per-shelf fetch raised 40 -> 80
 function showShelves() {
   const content = $('#content');
   content.innerHTML = SHELVES.map((shelf, index) => `<section class="shelf"><div class="sectionHead"><h2>${shelf[0]}</h2><button data-shelf="${index}">See all →</button></div><div class="rule"></div><div class="rail" id="rail${index}">${'<div class="skeleton"></div>'.repeat(8)}</div></section>`).join('');
   document.querySelectorAll('[data-shelf]').forEach((button) => { button.onclick = () => showResults(SHELVES[button.dataset.shelf][1]); });
-  const observer = new IntersectionObserver((entries) => entries.filter((entry) => entry.isIntersecting).forEach(async (entry) => { observer.unobserve(entry.target); const index = Number(entry.target.id.replace('rail', '')); try { const books = await searchBooks(SHELVES[index][1], 40); entry.target.innerHTML = books.length ? books.map(bookCard).join('') : '<p class="muted">More open books are being curated for this genre.</p>'; } catch { entry.target.innerHTML = '<p class="muted">This shelf could not load right now.</p>'; } }), { rootMargin: '450px 0px' });
+  const observer = new IntersectionObserver((entries) => entries.filter((entry) => entry.isIntersecting).forEach(async (entry) => { observer.unobserve(entry.target); const index = Number(entry.target.id.replace('rail', '')); try { const books = await searchBooks(SHELVES[index][1], 80); entry.target.innerHTML = books.length ? books.map(bookCard).join('') : '<p class="muted">More open books are being curated for this genre.</p>'; } catch { entry.target.innerHTML = '<p class="muted">This shelf could not load right now.</p>'; } }), { rootMargin: '450px 0px' });
   document.querySelectorAll('.rail').forEach((rail) => observer.observe(rail));
 }
 
+// search results cap raised 150 -> 300
 async function showResults(query) {
   const label = query?.genre || (typeof query === 'string' ? query : query.search) || 'open books';
   const content = $('#content');
   content.innerHTML = `<section class="shelf"><div class="sectionHead"><h2>Results for “${esc(label)}”</h2></div><div class="rule"></div><div class="loader">◌ Searching curated open books…</div></section>`;
-  try { const books = await searchBooks(query, 150); content.innerHTML = `<section class="shelf"><div class="sectionHead"><h2>Results for “${esc(label)}”</h2></div><div class="rule"></div><div class="results">${books.length ? books.map(bookCard).join('') : '<p class="muted">No matching non-Archive open books found. Try another title, author, or genre.</p>'}</div></section>`; content.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  try { const books = await searchBooks(query, 300); content.innerHTML = `<section class="shelf"><div class="sectionHead"><h2>Results for “${esc(label)}”</h2></div><div class="rule"></div><div class="results">${books.length ? books.map(bookCard).join('') : '<p class="muted">No matching non-Archive open books found. Try another title, author, or genre.</p>'}</div></section>`; content.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   catch (error) { content.innerHTML = `<p class="muted">${esc(error.message)}</p>`; }
 }
 
