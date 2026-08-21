@@ -19,8 +19,8 @@
     if(document.getElementById('devotional-library')) return true;
     const host=document.querySelector('#content')||document.querySelector('main')||document.querySelector('#app');
     if(!host) return false;
-    const section=document.createElement('section'); section.className='shelf'; section.id='devotional-library';
-    section.innerHTML='<div class="sectionHead"><h2>🕉️ Indian Spiritual & Devotional Classics</h2><span>Verified public-domain/open-source editions</span></div><div class="rule"></div><div class="rail extraRail">'+BOOKS.map(b=>'<article class="bookCard"><a class="coverBtn" href="'+b.url+'" target="_blank" rel="noopener"><span class="coverFallback"><strong>'+esc(b.title)+'</strong><small>OPEN SOURCE</small></span><em>SOURCE</em></a><h3>'+esc(b.title)+'</h3><p>'+esc(b.author)+'</p><a class="read" href="'+b.url+'" target="_blank" rel="noopener">Read book</a></article>').join('')+'</div>';
+    const section=document.createElement('section'); section.className='shelf devotionalShelf'; section.id='devotional-library';
+    section.innerHTML='<div class="sectionHead"><h2>🕉️ Indian Spiritual & Devotional Classics</h2><span>Verified public-domain/open-source editions</span></div><div class="rule"></div><div class="rail extraRail">'+BOOKS.map(b=>'<article class="bookCard devotionalBookCard"><a class="coverBtn devotionalCover" href="'+b.url+'" target="_blank" rel="noopener"><span class="coverFallback"><strong>'+esc(b.title)+'</strong><small>OPEN SOURCE</small></span><em>SOURCE</em></a><h3>'+esc(b.title)+'</h3><p>'+esc(b.author)+'</p><a class="read" href="'+b.url+'" target="_blank" rel="noopener">Read book</a></article>').join('')+'</div>';
     host.appendChild(section); return true;
   };
   const boot=()=>{if(!render())setTimeout(boot,300)};
