@@ -1,0 +1,280 @@
+(() => {
+  'use strict';
+
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function injectStyles() {
+    if (document.getElementById('gyansetu-ui-enhancement-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'gyansetu-ui-enhancement-styles';
+    style.textContent = `
+      .uiOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 88px 18px 18px;
+        background: rgba(5, 8, 7, .72);
+        backdrop-filter: blur(8px);
+      }
+      .uiWindow {
+        width: min(1180px, 100%);
+        max-height: calc(100vh - 106px);
+        overflow: hidden;
+        border: 1px solid rgba(210, 174, 99, .35);
+        border-radius: 24px;
+        background: var(--surface, #0d1210);
+        box-shadow: 0 24px 80px rgba(0,0,0,.45);
+        display: flex;
+        flex-direction: column;
+      }
+      .uiWindowHead {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 22px;
+        border-bottom: 1px solid rgba(210, 174, 99, .2);
+      }
+      .uiWindowHead h2 { margin: 0; }
+      .uiWindowHead p { margin: 4px 0 0; opacity: .7; font-size: .9rem; }
+      .uiClose {
+        flex: 0 0 auto;
+        width: 42px;
+        height: 42px;
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 50%;
+        background: transparent;
+        color: inherit;
+        font-size: 25px;
+        cursor: pointer;
+      }
+      .uiWindowBody {
+        min-height: 0;
+        overflow: auto;
+        padding: 18px;
+      }
+      .uiWindowBody > #content { width: 100%; }
+      .uiWindowBody .shelf { margin: 0; }
+      .uiWindowBody .sectionHead { display: none; }
+      .uiWindowBody .rule { display: none; }
+
+      .uiSearchOverlay {
+        position: fixed;
+        z-index: 9997;
+        top: 78px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(920px, calc(100vw - 28px));
+        max-height: min(72vh, 720px);
+        overflow: hidden;
+        border: 1px solid rgba(210, 174, 99, .38);
+        border-radius: 0 0 22px 22px;
+        background: var(--surface, #0d1210);
+        box-shadow: 0 24px 60px rgba(0,0,0,.5);
+      }
+      .uiSearchHead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(210, 174, 99, .2);
+      }
+      .uiSearchHead strong { font-size: .95rem; }
+      .uiSearchHead button { background: none; border: 0; color: inherit; cursor: pointer; font-size: 20px; }
+      .uiSearchBody { max-height: calc(min(72vh, 720px) - 52px); overflow: auto; padding: 14px; }
+      .uiSearchBody .shelf { margin: 0; }
+      .uiSearchBody .sectionHead { display: none; }
+      .uiSearchBody .rule { display: none; }
+      .uiSearchBody .results { margin: 0; }
+      .uiSearchBody .bookCard { min-width: 0; }
+
+      body.gyansetu-ui-locked { overflow: hidden; }
+      body.gyansetu-searching .topbar { position: relative; z-index: 9999; }
+
+      @media (max-width: 700px) {
+        .uiOverlay { padding: 64px 8px 8px; }
+        .uiWindow { max-height: calc(100vh - 72px); border-radius: 18px; }
+        .uiWindowHead { padding: 14px 16px; }
+        .uiWindowBody { padding: 10px; }
+        .uiSearchOverlay {
+          top: 64px;
+          width: calc(100vw - 12px);
+          max-height: 76vh;
+          border-radius: 0 0 18px 18px;
+        }
+        .uiSearchBody { max-height: calc(76vh - 52px); padding: 10px; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function waitForApp() {
+    return new Promise((resolve) => {
+      const check = () => {
+        if (document.querySelector('.topbar') && document.querySelector('#content')) return resolve();
+        setTimeout(check, 50);
+      };
+      check();
+    });
+  }
+
+  function createTemporaryContent(container) {
+    const original = document.getElementById('content');
+    if (!original) return null;
+    original.id = 'gyansetu-content-backup';
+    original.setAttribute('aria-hidden', 'true');
+    original.style.display = 'none';
+
+    const temp = document.createElement('div');
+    temp.id = 'content';
+    container.appendChild(temp);
+    return { original, temp };
+  }
+
+  function restoreContent(state) {
+    if (!state) return;
+    state.temp.remove();
+    state.original.id = 'content';
+    state.original.removeAttribute('aria-hidden');
+    state.original.style.display = '';
+  }
+
+  function makeCloseButton() {
+    const button = document.createElement('button');
+    button.className = 'uiClose';
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Close');
+    button.textContent = '×';
+    return button;
+  }
+
+  function closeActiveOverlay(overlay, state, mode) {
+    restoreContent(state);
+    overlay.remove();
+    document.body.classList.remove('gyansetu-ui-locked', 'gyansetu-searching');
+    if (mode === 'search') document.querySelector('#q')?.focus();
+  }
+
+  async function waitForResults(temp) {
+    for (let i = 0; i < 100; i += 1) {
+      if (temp.querySelector('.results') || temp.querySelector('.loader') === null) return;
+      await sleep(50);
+    }
+  }
+
+  async function openGenreWindow(button, originalClick, event) {
+    if (document.querySelector('.uiOverlay')) return;
+    event.preventDefault();
+
+    const title = button.closest('.shelf')?.querySelector('h2')?.textContent?.trim() || 'Genre';
+    const overlay = document.createElement('div');
+    overlay.className = 'uiOverlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+
+    const windowEl = document.createElement('section');
+    windowEl.className = 'uiWindow';
+    const head = document.createElement('header');
+    head.className = 'uiWindowHead';
+    head.innerHTML = `<div><h2>${escapeHtml(title)}</h2><p>Browse all available books in this genre</p></div>`;
+    const close = makeCloseButton();
+    head.appendChild(close);
+    const body = document.createElement('div');
+    body.className = 'uiWindowBody';
+    windowEl.append(head, body);
+    overlay.appendChild(windowEl);
+    document.body.appendChild(overlay);
+    document.body.classList.add('gyansetu-ui-locked');
+
+    const state = createTemporaryContent(body);
+    if (!state) { overlay.remove(); return; }
+
+    close.onclick = () => closeActiveOverlay(overlay, state, 'genre');
+    overlay.onclick = (e) => { if (e.target === overlay) closeActiveOverlay(overlay, state, 'genre'); };
+
+    await Promise.resolve(originalClick.call(button, event));
+    await waitForResults(state.temp);
+    state.temp.querySelector('h2')?.setAttribute('aria-label', `${title} results`);
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  }
+
+  async function openSearchWindow(form, originalSubmit, event) {
+    event.preventDefault();
+    const input = form.querySelector('#q');
+    const query = input?.value?.trim();
+    if (!query || document.querySelector('.uiSearchOverlay')) return;
+
+    const overlay = document.createElement('section');
+    overlay.className = 'uiSearchOverlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-label', 'Search results');
+
+    const head = document.createElement('div');
+    head.className = 'uiSearchHead';
+    head.innerHTML = `<strong>Search results for “${escapeHtml(query)}”</strong>`;
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Close search results');
+    close.textContent = '×';
+    head.appendChild(close);
+
+    const body = document.createElement('div');
+    body.className = 'uiSearchBody';
+    overlay.append(head, body);
+    document.body.appendChild(overlay);
+    document.body.classList.add('gyansetu-searching');
+
+    const state = createTemporaryContent(body);
+    if (!state) { overlay.remove(); return; }
+
+    const closeSearch = () => closeActiveOverlay(overlay, state, 'search');
+    close.onclick = closeSearch;
+
+    try {
+      await Promise.resolve(originalSubmit.call(form, event));
+      await waitForResults(state.temp);
+    } catch {
+      closeSearch();
+    }
+  }
+
+  function enhance() {
+    injectStyles();
+
+    const form = document.querySelector('.search');
+    if (form && !form.dataset.uiEnhanced) {
+      const originalSubmit = form.onsubmit;
+      if (typeof originalSubmit === 'function') {
+        form.onsubmit = (event) => openSearchWindow(form, originalSubmit, event);
+        form.dataset.uiEnhanced = 'true';
+      }
+    }
+
+    document.querySelectorAll('[data-shelf]').forEach((button) => {
+      if (button.dataset.uiEnhanced) return;
+      const originalClick = button.onclick;
+      if (typeof originalClick !== 'function') return;
+      button.onclick = (event) => openGenreWindow(button, originalClick, event);
+      button.dataset.uiEnhanced = 'true';
+    });
+  }
+
+  function boot() {
+    waitForApp().then(() => {
+      enhance();
+      const observer = new MutationObserver(() => enhance());
+      observer.observe(document.getElementById('app'), { childList: true, subtree: true });
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+  else boot();
+})();
