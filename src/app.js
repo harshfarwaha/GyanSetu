@@ -8,6 +8,7 @@ const INDIAN_PDF_BOOKS = [
     pdfUrl: 'https://archive.org/download/VijnanabhairavaOrDivineConsciousnessJaidevaSingh/Vijnanabhairava%20or%20Divine%20Consciousness%20-%20Jaideva%20Singh.pdf',
     sourceUrl: 'https://archive.org/details/VijnanabhairavaOrDivineConsciousnessJaidevaSingh',
     coverUrl: 'https://archive.org/services/img/VijnanabhairavaOrDivineConsciousnessJaidevaSingh',
+    archiveIdentifier: 'VijnanabhairavaOrDivineConsciousnessJaidevaSingh',
     language: 'Sanskrit / English',
     desc: 'A scanned public-access edition for immersive page-by-page reading inside GyanSetu.',
   },
@@ -20,6 +21,7 @@ const INDIAN_PDF_BOOKS = [
     pdfUrl: 'https://archive.org/download/gitanjalisongoffe00tagouoft/gitanjalisongoffe00tagouoft.pdf',
     sourceUrl: 'https://archive.org/details/gitanjalisongoffe00tagouoft',
     coverUrl: 'https://archive.org/services/img/gitanjalisongoffe00tagouoft',
+    archiveIdentifier: 'gitanjalisongoffe00tagouoft',
     language: 'English',
     desc: 'Tagore’s landmark poems in an original scanned edition that opens directly in the reader.',
   },
@@ -32,6 +34,7 @@ const INDIAN_PDF_BOOKS = [
     pdfUrl: 'https://archive.org/download/Godan_201807/Godan.pdf',
     sourceUrl: 'https://archive.org/details/Godan_201807',
     coverUrl: 'https://archive.org/services/img/Godan_201807',
+    archiveIdentifier: 'Godan_201807',
     language: 'Hindi',
     desc: 'A complete Hindi scan of Premchand’s classic novel for scroll-based reading.',
   },
@@ -44,6 +47,7 @@ const INDIAN_PDF_BOOKS = [
     pdfUrl: 'https://archive.org/download/hindswarajorind00gandrich/hindswarajorind00gandrich.pdf',
     sourceUrl: 'https://archive.org/details/hindswarajorind00gandrich',
     coverUrl: 'https://archive.org/services/img/hindswarajorind00gandrich',
+    archiveIdentifier: 'hindswarajorind00gandrich',
     language: 'English',
     desc: 'An archival scanned edition of Gandhi’s influential text, kept inside GyanSetu.',
   },
@@ -56,6 +60,7 @@ const INDIAN_PDF_BOOKS = [
     pdfUrl: 'https://archive.org/download/bhagavadgitawith00telauoft/bhagavadgitawith00telauoft.pdf',
     sourceUrl: 'https://archive.org/details/bhagavadgitawith00telauoft',
     coverUrl: 'https://archive.org/services/img/bhagavadgitawith00telauoft',
+    archiveIdentifier: 'bhagavadgitawith00telauoft',
     language: 'Sanskrit / English',
     desc: 'A scanned scholarly edition that preserves the feel of the printed book.',
   },
@@ -68,6 +73,7 @@ const INDIAN_PDF_BOOKS = [
     pdfUrl: 'https://archive.org/download/tirukkuralenglish00tiruuoft/tirukkuralenglish00tiruuoft.pdf',
     sourceUrl: 'https://archive.org/details/tirukkuralenglish00tiruuoft',
     coverUrl: 'https://archive.org/services/img/tirukkuralenglish00tiruuoft',
+    archiveIdentifier: 'tirukkuralenglish00tiruuoft',
     language: 'Tamil / English',
     desc: 'A classic Tamil work presented as a full original-book PDF.',
   },
@@ -130,6 +136,8 @@ const app = $('#app');
 const author = (book) => (book.authors || []).map((person) => person.name).join(', ') || 'Unknown author';
 const cover = (book) => book.coverUrl || book.formats?.['image/jpeg'] || '';
 const pdfOf = (book) => book.pdfUrl || Object.entries(book.formats || {}).find(([type, url]) => /pdf/i.test(type) || String(url).toLowerCase().split('?')[0].endsWith('.pdf'))?.[1]?.replace('http://', 'https://') || '';
+const archiveIdOf = (book) => book.archiveIdentifier || book.sourceUrl?.match(/archive\.org\/details\/([^/?#]+)/)?.[1] || book.pdfUrl?.match(/archive\.org\/download\/([^/?#]+)/)?.[1] || '';
+const archiveEmbedOf = (book) => { const id = archiveIdOf(book); return id ? `https://archive.org/embed/${encodeURIComponent(id)}` : ''; };
 const esc = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const remember = (books) => books.forEach((book) => library.set(String(book.id), book));
 
@@ -195,15 +203,17 @@ function archiveBook(doc) {
 }
 
 async function hydrateArchivePdf(book) {
-  if (!book.archiveIdentifier || book.pdfChecked) return book;
+  const archiveIdentifier = archiveIdOf(book);
+  if (!archiveIdentifier || book.pdfChecked) return book;
+  book.archiveIdentifier = archiveIdentifier;
   book.pdfChecked = true;
   try {
-    const response = await fetch(`https://archive.org/metadata/${book.archiveIdentifier}`);
+    const response = await fetch(`https://archive.org/metadata/${archiveIdentifier}`);
     if (!response.ok) return book;
     const data = await response.json();
     const files = data.files || [];
     const preferred = files.find((file) => /\.pdf$/i.test(file.name) && !/_text\.pdf$/i.test(file.name)) || files.find((file) => /\.pdf$/i.test(file.name) || /pdf/i.test(file.format || ''));
-    if (preferred?.name) book.pdfUrl = `https://archive.org/download/${book.archiveIdentifier}/${encodeURIComponent(preferred.name).replace(/%2F/g, '/')}`;
+    if (preferred?.name) book.pdfUrl = `https://archive.org/download/${archiveIdentifier}/${encodeURIComponent(preferred.name).replace(/%2F/g, '/')}`;
   } catch { /* Keep the predictable fallback URL so the reader can still try to open the item. */ }
   return book;
 }
@@ -323,8 +333,10 @@ function openDetails(book) {
 async function openPdfReader(book) {
   await hydrateArchivePdf(book);
   const pdfUrl = pdfOf(book);
+  const embedUrl = archiveEmbedOf(book);
+  const readerUrl = pdfUrl ? `${pdfUrl}#toolbar=1&navpanes=0&view=FitH` : embedUrl;
   saveProgress(book, 'PDF opened');
-  document.body.insertAdjacentHTML('beforeend', `<section class="reader" role="dialog" aria-modal="true"><div class="readerShell pdfShell"><div class="readerTop"><div><small>Original scanned PDF</small><b>${esc(book.title)}</b></div><button id="rclose" aria-label="Close reader">×</button></div><div class="pdfToolbar"><span>Scroll naturally to read the complete book inside GyanSetu.</span><a href="${pdfUrl}" download target="_blank" rel="noopener">Download PDF</a></div><iframe class="pdfFrame" title="${esc(book.title)} PDF" src="${pdfUrl}#toolbar=1&navpanes=0&view=FitH"></iframe></div></section>`);
+  document.body.insertAdjacentHTML('beforeend', `<section class="reader" role="dialog" aria-modal="true"><div class="readerShell pdfShell"><div class="readerTop"><div><small>Original scanned PDF</small><b>${esc(book.title)}</b></div><button id="rclose" aria-label="Close reader">×</button></div><div class="pdfToolbar"><span>Scroll naturally to read the complete book inside GyanSetu.</span>${pdfUrl ? `<a href="${pdfUrl}" download target="_blank" rel="noopener">Download PDF</a>` : sourceLink(book)}</div><iframe class="pdfFrame" title="${esc(book.title)} PDF" src="${readerUrl}"></iframe></div></section>`);
   const reader = $('.reader');
   const close = () => { reader?.remove(); if (activeReaderCleanup) window.removeEventListener('keydown', activeReaderCleanup); activeReaderCleanup = null; renderHistory(); };
   $('#rclose').onclick = close;
