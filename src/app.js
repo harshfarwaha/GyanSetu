@@ -261,25 +261,17 @@ async function hydrateArchivePdf(book) {
   return book;
 }
 
-async function hydrateInBatches(candidates, batchSize = 6) {
-  const hydrated = [];
-  for (let start = 0; start < candidates.length; start += batchSize) {
-    const batch = candidates.slice(start, start + batchSize);
-    hydrated.push(...await Promise.all(batch.map(hydrateArchivePdf)));
-  }
-  return hydrated;
-}
-
 async function searchArchive(query, count = 24) {
-  const response = await fetch(archiveSearchUrl(query, count * 2));
+  const response = await fetch(archiveSearchUrl(query, count));
   if (!response.ok) throw Error('The Internet Archive PDF index could not be reached. Please try again.');
   const data = await response.json();
-  const candidates = (data.response?.docs || []).map(archiveBook);
-  // Hydrate in small batches rather than one giant Promise.all — firing 30-48
-  // metadata requests at once was getting rate-limited by archive.org, so most
-  // candidates silently failed hydration and shelves came back empty.
-  const hydrated = await hydrateInBatches(candidates);
-  const books = hydrated.filter((book) => pdfOf(book)).slice(0, count);
+  // Cards render off the guessed pdfUrl that archiveBook() already sets
+  // (archive.org/download/<id>/<id>.pdf), so no per-book metadata lookup is
+  // needed just to populate a shelf. The exact PDF filename is only verified
+  // via hydrateArchivePdf() at click-time, in openPdfReader() — this is what
+  // made shelves take so long to appear, since every card used to wait on its
+  // own archive.org/metadata/ round trip before it could even render.
+  const books = (data.response?.docs || []).map(archiveBook).slice(0, count);
   remember(books);
   return books;
 }
