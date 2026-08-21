@@ -1,0 +1,51 @@
+/* GyanSetu top-8 UX overhaul: responsive cards, readable windows, filters and performance hints. */
+
+/* 1. Mobile consistency */
+@media (max-width: 560px) {
+  .shelf { margin-bottom: 14px !important; padding: 13px !important; }
+  .shelf + .shelf { margin-top: 0 !important; }
+  .sectionHead { gap: 10px; }
+  .sectionHead h2 { max-width: 72%; }
+  .rail { gap: 10px !important; padding-bottom: 9px !important; }
+  .bookCard { width: 132px !important; min-width: 132px !important; max-width: 132px !important; flex: 0 0 132px !important; height: 306px !important; }
+  .coverBtn { width: 132px !important; height: 198px !important; min-height: 198px !important; padding: 6px !important; }
+  .coverBtn img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+  .bookCard h3 { height: 38px !important; min-height: 38px !important; max-height: 38px !important; font-size: 14px !important; margin: 7px 0 2px !important; }
+  .bookCard p { height: 15px !important; min-height: 15px !important; max-height: 15px !important; margin-bottom: 6px !important; font-size: 10px !important; }
+  .bookCard .read { height: 34px !important; min-height: 34px !important; padding: 7px 4px !important; font-size: 11px !important; margin-top: auto !important; }
+  .results { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 18px 12px !important; }
+  .results .bookCard { width: 100% !important; min-width: 0 !important; flex: none !important; height: 304px !important; }
+  .results .coverBtn { width: 100% !important; height: auto !important; aspect-ratio: 2 / 3 !important; min-height: 0 !important; }
+}
+
+/* 2/3/4. Dedicated search and genre windows stay visually separate from the homepage. */
+.uiWindow .results { width: 100%; }
+.uiWindow .results .bookCard { min-width: 0; }
+.uiWindow .shelf { border: 0; box-shadow: none; background: transparent; padding: 0; }
+.uiWindow .bookCard { transition: transform .18s ease; }
+.uiWindow .bookCard:hover { transform: translateY(-2px); }
+
+/* 5. Saved/recent collections */
+.uxCollectionCard .coverBtn { cursor: pointer; }
+.uxCollectionCard .coverBtn img { transition: transform .2s ease; }
+.uxCollectionCard .coverBtn:hover img { transform: scale(1.025); }
+
+/* 6. Reader safety: keep the reader controls usable on small screens. */
+.reader .pdfShell { min-height: 0; }
+.reader .pdfFrame { width: 100%; height: calc(100vh - 150px); min-height: 520px; border: 1px solid rgba(198,164,95,.2); border-radius: 14px; background: #fff; }
+.reader .pdfToolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; color:var(--muted); font-size:12px; }
+.reader .pdfToolbar a { color:var(--gold); font-weight:800; text-decoration:none; }
+@media (max-width:700px) {
+  .reader .pdfFrame { height: calc(100vh - 128px); min-height: 70vh; }
+  .reader .pdfToolbar span { display:none; }
+  .reader .pdfToolbar { justify-content:flex-end; }
+}
+
+/* 7. Details feel like a proper book page rather than a tiny alert. */
+.modal .details { overflow:auto; }
+.modal .details .detailCover { align-self:start; }
+.modal .details .uxFavorite { align-self:flex-start; }
+
+/* 8. Performance: browsers can skip rendering off-screen shelves until needed. */
+.shelf.uxShelfReady { content-visibility:auto; contain-intrinsic-size: 420px; }
+.bookCard img, .gridMini img, .historyCard img { content-visibility:auto; }
