@@ -76,6 +76,9 @@ const INDIAN_PDF_BOOKS = [
 // All queries are scoped to mediatype:texts + format:pdf so only directly-openable
 // public-domain / openly-licensed PDF scans are ever surfaced (no plain-text-only items,
 // no catalogue-only listings that just link off-site).
+// gutendexTerm additionally pulls matching public-domain works from Project Gutenberg
+// (via the Gutendex API), filtered to items that have a confirmed PDF format — this is
+// a second fully-legal source layered on top of Internet Archive, not a general web search.
 const DIRECT_PDF_SOURCES = [
   {
     name: 'Indian books mega library',
@@ -84,30 +87,37 @@ const DIRECT_PDF_SOURCES = [
   {
     name: 'Fiction & classics',
     query: 'subject:(fiction OR classics OR literature OR novels) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'fiction',
   },
   {
     name: 'Adventure',
     query: 'subject:(adventure OR "adventure stories" OR exploration OR "sea stories") AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'adventure',
   },
   {
     name: 'Mystery & detective',
     query: 'subject:(mystery OR detective OR crime OR thriller OR "murder mystery") AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'detective',
   },
   {
     name: 'Romance & love stories',
     query: 'subject:(romance OR "love stories" OR "romantic fiction") AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'love stories',
   },
   {
     name: 'Science fiction & fantasy',
     query: 'subject:("science fiction" OR fantasy OR "speculative fiction" OR utopias) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'science fiction',
   },
   {
     name: 'Poetry',
     query: 'subject:(poetry OR poems OR verse) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'poetry',
   },
   {
     name: 'Storybooks & children',
     query: 'subject:("children\'s stories" OR "fairy tales" OR "juvenile fiction" OR "folk tales" OR nursery) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'fairy tales',
   },
   {
     name: 'Encyclopedias & reference',
@@ -129,33 +139,36 @@ const DIRECT_PDF_SOURCES = [
   {
     name: 'Science & technology',
     query: 'subject:(science OR mathematics OR technology OR engineering OR medicine) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'science',
   },
   {
     name: 'History & biography',
     query: 'subject:(history OR biography OR memoir OR travel OR geography) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'history',
   },
   {
     name: 'Philosophy, religion & ideas',
     query: 'subject:(philosophy OR religion OR spirituality OR psychology OR sociology) AND mediatype:texts AND (format:pdf OR format:"Text PDF")',
+    gutendexTerm: 'philosophy',
   },
 ];
 
 const SHELVES = [
   ['Indian PDF Reading Room', { local: 'indian-pdfs' }],
   ['All Indian Open PDFs', { archive: DIRECT_PDF_SOURCES[0].query }],
-  ['Fiction, Classics & Literature', { archive: DIRECT_PDF_SOURCES[1].query }],
-  ['Adventure', { archive: DIRECT_PDF_SOURCES[2].query }],
-  ['Mystery & Detective', { archive: DIRECT_PDF_SOURCES[3].query }],
-  ['Romance & Love Stories', { archive: DIRECT_PDF_SOURCES[4].query }],
-  ['Science Fiction & Fantasy', { archive: DIRECT_PDF_SOURCES[5].query }],
-  ['Poetry', { archive: DIRECT_PDF_SOURCES[6].query }],
-  ['Storybooks & Children', { archive: DIRECT_PDF_SOURCES[7].query }],
+  ['Fiction, Classics & Literature', { archive: DIRECT_PDF_SOURCES[1].query, gutendexTerm: DIRECT_PDF_SOURCES[1].gutendexTerm }],
+  ['Adventure', { archive: DIRECT_PDF_SOURCES[2].query, gutendexTerm: DIRECT_PDF_SOURCES[2].gutendexTerm }],
+  ['Mystery & Detective', { archive: DIRECT_PDF_SOURCES[3].query, gutendexTerm: DIRECT_PDF_SOURCES[3].gutendexTerm }],
+  ['Romance & Love Stories', { archive: DIRECT_PDF_SOURCES[4].query, gutendexTerm: DIRECT_PDF_SOURCES[4].gutendexTerm }],
+  ['Science Fiction & Fantasy', { archive: DIRECT_PDF_SOURCES[5].query, gutendexTerm: DIRECT_PDF_SOURCES[5].gutendexTerm }],
+  ['Poetry', { archive: DIRECT_PDF_SOURCES[6].query, gutendexTerm: DIRECT_PDF_SOURCES[6].gutendexTerm }],
+  ['Storybooks & Children', { archive: DIRECT_PDF_SOURCES[7].query, gutendexTerm: DIRECT_PDF_SOURCES[7].gutendexTerm }],
   ['Encyclopedias & Reference', { archive: DIRECT_PDF_SOURCES[8].query }],
   ['Comics & Graphic Novels', { archive: DIRECT_PDF_SOURCES[9].query }],
   ['Manga & Graphic Tales', { archive: DIRECT_PDF_SOURCES[10].query }],
-  ['Science, Math & Technology', { archive: DIRECT_PDF_SOURCES[11].query }],
-  ['History, Biography & Travel', { archive: DIRECT_PDF_SOURCES[12].query }],
-  ['Philosophy, Religion & Ideas', { archive: DIRECT_PDF_SOURCES[13].query }],
+  ['Science, Math & Technology', { archive: DIRECT_PDF_SOURCES[11].query, gutendexTerm: DIRECT_PDF_SOURCES[11].gutendexTerm }],
+  ['History, Biography & Travel', { archive: DIRECT_PDF_SOURCES[12].query, gutendexTerm: DIRECT_PDF_SOURCES[12].gutendexTerm }],
+  ['Philosophy, Religion & Ideas', { archive: DIRECT_PDF_SOURCES[13].query, gutendexTerm: DIRECT_PDF_SOURCES[13].gutendexTerm }],
 ];
 
 const RESOURCE_LINKS = DIRECT_PDF_SOURCES.map((source) => ({
@@ -304,9 +317,53 @@ async function searchArchive(query, count = 24) {
   return books;
 }
 
+// Project Gutenberg (via the public Gutendex API) — a second, fully public-domain
+// source. mime_type=application/pdf means every result already has a confirmed,
+// direct PDF link with no metadata-hydration step needed, unlike archive.org.
+function gutendexBook(doc) {
+  const pdfUrl = doc.formats?.['application/pdf'] || '';
+  return {
+    id: `gb-${doc.id}`,
+    title: doc.title || 'Untitled',
+    authors: (doc.authors || []).map((person) => ({ name: person.name })),
+    subjects: [...(doc.subjects || []), ...(doc.bookshelves || [])],
+    download_count: doc.download_count || 0,
+    pdfUrl,
+    coverUrl: doc.formats?.['image/jpeg'] || '',
+    language: (doc.languages || []).join(', ') || 'Open edition',
+    desc: 'A public-domain work from Project Gutenberg, opened as a complete PDF.',
+  };
+}
+
+async function searchGutendex(term, count = 12) {
+  if (!term) return [];
+  try {
+    const params = new URLSearchParams({ search: term, mime_type: 'application/pdf' });
+    const response = await fetchWithTimeout(`https://gutendex.com/books/?${params}`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    const books = (data.results || []).map(gutendexBook).filter((book) => pdfOf(book)).slice(0, count);
+    remember(books);
+    return books;
+  } catch { return []; }
+}
+
 async function searchBooks(query, count = 24) {
   if (query?.local === 'indian-pdfs') { remember(INDIAN_PDF_BOOKS); return INDIAN_PDF_BOOKS; }
-  if (query?.archive) return searchArchive(query.archive, count);
+  if (query?.archive) {
+    // Run Internet Archive and Project Gutenberg searches in parallel and merge —
+    // Archive results lead (they're the deeper, more India-relevant catalogue),
+    // Gutenberg results fill in behind them, deduplicated by id.
+    const gutendexCount = query.gutendexTerm ? Math.max(4, Math.floor(count * 0.3)) : 0;
+    const [archiveBooks, gutendexBooks] = await Promise.all([
+      searchArchive(query.archive, count),
+      gutendexCount ? searchGutendex(query.gutendexTerm, gutendexCount) : Promise.resolve([]),
+    ]);
+    const seen = new Set(archiveBooks.map((book) => book.id));
+    const merged = [...archiveBooks, ...gutendexBooks.filter((book) => !seen.has(book.id))].slice(0, count);
+    remember(merged);
+    return merged;
+  }
   const term = typeof query === 'string' ? query : query?.search || query?.topic || 'free books';
   return searchArchive(`(${term}) AND mediatype:texts AND (format:pdf OR format:"Text PDF")`, count);
 }
