@@ -7,7 +7,7 @@
     const footer = document.createElement('footer');
     footer.id = 'developerCredit';
     footer.setAttribute('aria-label', 'Developer credit');
-    footer.innerHTML = '<span>What you see?</span> <strong>Developed by HARSH</strong>';
+    footer.innerHTML = '<span>Like what you see?</span> <strong>Developed by HARSH</strong>';
     document.body.appendChild(footer);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addDeveloperCredit, { once: true });
