@@ -201,7 +201,11 @@ const RESOURCE_LINKS = [
 
 const HISTORY_KEY = 'gyansetu.readingHistory';
 const USER_KEY = 'gyansetu.googleUser';
+const USERS_KEY = 'gyansetu.accounts';
 const CACHE_KEY = 'gyansetu.bookCache.v3';
+// TODO: replace with your real OAuth Client ID from https://console.cloud.google.com/apis/credentials
+// to enable the "Continue with Google" button. Until then it shows a setup notice instead of failing silently.
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 const library = new Map();
 let dark = true;
 let activeReaderCleanup = null;
@@ -343,9 +347,9 @@ function showBrowseAll() {
 function render() {
   remember(FREE_PDF_BOOKS);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  app.innerHTML = `<div class="app"><header class="topbar"><a class="brand" href="#" aria-label="GyanSetu home"><img class="brandLogo" src="src/assets/gyansetu-logo.svg" alt="GyanSetu logo"><div><b>GyanSetu</b><span>Digital Library</span></div></a><form class="search"><span>⌕</span><input id="q" placeholder="Search shayari, romantic novels, comics, storybooks..."><button>Search</button></form><nav class="topActions"><button class="navBtn" id="browseAllBtn">Browse All</button><button class="navBtn" id="historyBtn">History</button><button class="accountBtn" id="loginBtn">${currentUser ? `<span>${userInitials()}</span>${esc(currentUser.name)}` : 'Continue with Google'}</button><button class="iconBtn" id="theme" aria-label="Toggle theme">${dark ? '☀' : '☾'}</button></nav></header><main><section class="hero"><div class="heroText"><p class="eyebrow">✦ open web reading room</p><h1>Read free books without broken links.</h1><p>GyanSetu now includes every major reading lane: shayari, Punjabi poetry, romantic novels, comics, manga, storybooks, encyclopedias, reference works, textbooks, classics, and research books from legal open-web or official free sources — plus a Browse All mode that pages through Project Gutenberg’s entire live catalog.</p><div class="heroActions"><button data-search="Indian">Open Indian books</button><button class="ghost" id="heroBrowseAll">Browse all 70,000+ books</button></div></div><aside class="device"><div class="deviceTop">Fast reading desk <span>Reliable links</span></div><div class="gridMini" id="featured"></div></aside></section><section class="historyPanel" id="history"><div><p class="eyebrow">Reading history</p><h2>Pick up where you left off</h2></div><div id="historyList"></div></section><section class="resources" id="resources"></section><div id="content"></div></main></div>`;
+  app.innerHTML = `<div class="app"><header class="topbar"><a class="brand" href="#" aria-label="GyanSetu home"><img class="brandLogo" src="src/assets/gyansetu-logo.svg" alt="GyanSetu logo"><div><b>GyanSetu</b><span>Open Digital Library</span></div></a><form class="search"><span>⌕</span><input id="q" placeholder="Search titles, authors, or genres..."><button>Search</button></form><nav class="topActions"><button class="navBtn" id="browseAllBtn">Browse All</button><button class="navBtn" id="historyBtn">History</button><button class="accountBtn" id="loginBtn">${currentUser ? `<span>${userInitials()}</span>${esc(currentUser.name)}` : 'Sign in'}</button><button class="iconBtn" id="theme" aria-label="Toggle theme">${dark ? '☀' : '☾'}</button></nav></header><main><section class="intro"><p class="eyebrow">✦ About GyanSetu</p><p>GyanSetu is an open digital library that brings together public-domain classics, Creative Commons textbooks, and official free editions from trusted sources such as Project Gutenberg, OpenStax, DOAB, and Wikisource. Every title here is legally free to read, with no listings drawn from Internet Archive or Open Library — so every link stays reliable.</p></section><section class="hero"><div class="heroText"><p class="eyebrow">✦ Read without interruption</p><h1>A dependable home for free, legal reading.</h1><p>Explore classic literature, academic textbooks, poetry, comics, and reference works organized into curated shelves — plus a Browse All mode that pages through Project Gutenberg’s entire live catalog of more than 70,000 titles.</p><div class="heroActions"><button data-search="Indian">Explore Indian literature</button><button class="ghost" id="heroBrowseAll">Browse the full catalog</button></div></div><aside class="device"><div class="deviceTop">Continue reading <span>Reliable links</span></div><div class="gridMini" id="featured"></div></aside></section><section class="historyPanel" id="history"><div><p class="eyebrow">Reading history</p><h2>Pick up where you left off</h2></div><div id="historyList"></div></section><section class="resources" id="resources"></section><div id="content"></div></main></div>`;
   $('#theme').onclick = () => { dark = !dark; render(); };
-  $('#loginBtn').onclick = loginFlow;
+  $('#loginBtn').onclick = () => { currentUser ? openAccountMenu() : openAuthModal('signin'); };
   $('#historyBtn').onclick = () => $('#history').scrollIntoView({ behavior: 'smooth' });
   $('#browseAllBtn').onclick = showBrowseAll;
   $('#heroBrowseAll').onclick = showBrowseAll;
@@ -355,17 +359,83 @@ function render() {
   renderHistory(); renderResources(); loadFeatured(); showShelves();
 }
 
-function loginFlow() {
-  if (currentUser && confirm('Sign out of GyanSetu?')) { currentUser = null; localStorage.removeItem(USER_KEY); render(); return; }
-  if (currentUser) return;
-  const name = prompt('Continue with Google\n\nEnter your Google account name to enable reading history on this device:');
-  if (!name) return;
-  currentUser = { name: name.trim(), email: `${name.trim().toLowerCase().replace(/\s+/g, '.')}@google.user` };
-  writeJson(USER_KEY, currentUser); render();
+function openAccountMenu() {
+  if (!currentUser) return;
+  if (confirm(`Signed in as ${currentUser.name} (${currentUser.email})\n\nSign out of GyanSetu?`)) {
+    currentUser = null; localStorage.removeItem(USER_KEY); render();
+  }
+}
+
+async function hashPassword(password) {
+  const data = new TextEncoder().encode(`gyansetu::${password}`);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function handleEmailAuth(mode, formData) {
+  const email = String(formData.get('email') || '').trim().toLowerCase();
+  const password = String(formData.get('password') || '');
+  const errorEl = $('#authError');
+  const users = readJson(USERS_KEY, {});
+
+  if (mode === 'signup') {
+    const name = String(formData.get('name') || '').trim();
+    if (!name) { errorEl.textContent = 'Please enter your name.'; return; }
+    if (users[email]) { errorEl.textContent = 'An account with this email already exists — try signing in instead.'; return; }
+    users[email] = { name, passwordHash: await hashPassword(password) };
+    writeJson(USERS_KEY, users);
+    currentUser = { name, email };
+  } else {
+    const record = users[email];
+    const attemptHash = await hashPassword(password);
+    if (!record || record.passwordHash !== attemptHash) { errorEl.textContent = 'Incorrect email or password.'; return; }
+    currentUser = { name: record.name, email };
+  }
+  writeJson(USER_KEY, currentUser);
+  $('.modal')?.remove();
+  render();
+}
+
+function decodeGoogleCredential(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return { name: payload.name || payload.email, email: payload.email };
+  } catch { return null; }
+}
+
+function handleGoogleCredential(response) {
+  const profile = decodeGoogleCredential(response.credential);
+  if (!profile) return;
+  currentUser = profile;
+  writeJson(USER_KEY, currentUser);
+  $('.modal')?.remove();
+  render();
+}
+
+function renderGoogleButton() {
+  const holder = $('#googleBtnHolder');
+  if (!holder) return;
+  if (GOOGLE_CLIENT_ID.startsWith('YOUR_')) {
+    holder.innerHTML = '<p class="muted">Google Sign-In needs a Client ID from Google Cloud Console — add yours in app.js to enable this button.</p>';
+    return;
+  }
+  if (!window.google?.accounts?.id) { holder.innerHTML = '<p class="muted">Loading Google Sign-In…</p>'; setTimeout(renderGoogleButton, 400); return; }
+  window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+  window.google.accounts.id.renderButton(holder, { theme: 'filled_black', size: 'large', shape: 'pill', width: 320 });
+}
+
+function openAuthModal(mode = 'signin') {
+  const isSignup = mode === 'signup';
+  document.body.insertAdjacentHTML('beforeend', `<div class="modal" role="dialog" aria-modal="true"><div class="details authCard"><button class="close" aria-label="Close">×</button><p class="eyebrow">✦ GyanSetu account</p><h2>${isSignup ? 'Create your account' : 'Welcome back'}</h2><p class="desc">Sign in to sync your reading history and pick up any book exactly where you left off.</p><div id="googleBtnHolder" class="googleBtnHolder"></div><div class="authDivider"><span>or continue with email</span></div><form id="authForm" class="authForm" novalidate>${isSignup ? '<label>Full name<input name="name" required placeholder="Your name"></label>' : ''}<label>Email<input type="email" name="email" required placeholder="you@example.com"></label><label>Password<input type="password" name="password" required minlength="6" placeholder="At least 6 characters"></label><p class="authError" id="authError"></p><button class="primary" type="submit">${isSignup ? 'Create account' : 'Sign in'}</button></form><p class="authSwitch">${isSignup ? 'Already have an account?' : 'New to GyanSetu?'} <button type="button" id="authSwitchBtn">${isSignup ? 'Sign in' : 'Create one'}</button></p><p class="muted authNote">Account details are stored securely on this device only — GyanSetu does not yet run its own server.</p></div></div>`);
+  $('.close').onclick = () => $('.modal').remove();
+  $('.modal').onclick = (event) => { if (event.target.classList.contains('modal')) event.target.remove(); };
+  $('#authSwitchBtn').onclick = () => { $('.modal').remove(); openAuthModal(isSignup ? 'signin' : 'signup'); };
+  $('#authForm').onsubmit = (event) => { event.preventDefault(); handleEmailAuth(mode, new FormData(event.target)); };
+  renderGoogleButton();
 }
 
 function renderResources() {
-  $('#resources').innerHTML = `<div class="sectionHead"><div><p class="eyebrow">Free open-book collections</p><h2>No Internet Archive books</h2></div><span>Public-domain and Creative Commons sources only</span></div><div class="resourceGrid">${RESOURCE_LINKS.map((item) => `<a class="resourceCard" href="${item.url}" target="_blank" rel="noopener"><small>${esc(item.type)}</small><b>${esc(item.name)}</b><span>${esc(item.desc)}</span></a>`).join('')}</div>`;
+  $('#resources').innerHTML = `<div class="sectionHead"><div><p class="eyebrow">Trusted collections</p><h2>Verified open-access sources</h2></div><span>Public-domain and Creative Commons sources only</span></div><div class="resourceGrid">${RESOURCE_LINKS.map((item) => `<a class="resourceCard" href="${item.url}" target="_blank" rel="noopener"><small>${esc(item.type)}</small><b>${esc(item.name)}</b><span>${esc(item.desc)}</span></a>`).join('')}</div>`;
 }
 
 function directPdfLink(book) { const readUrl = readableOf(book); return readUrl ? `<a class="sourceLink" href="${readUrl}" target="_blank" rel="noopener">Open ${formatOf(book)}</a><a class="sourceLink" href="${book.sourceUrl || readUrl}" target="_blank" rel="noopener">Source: ${esc(book.sourceName || 'Open library')}</a>` : ''; }
