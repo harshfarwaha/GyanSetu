@@ -1,10 +1,23 @@
 const SHELVES = [
   ['Curated Classics', { topic: 'fiction' }],
+  ['Indian Literature', { search: 'Tagore Premchand Ramayana Mahabharata' }],
+  ['Hindi & Regional Voices', { search: 'Hindi Bengali Tamil Marathi Sanskrit' }],
   ['Poetry & Drama', { topic: 'poetry' }],
+  ['Open Comics & Graphic Stories', { search: 'comic graphic illustrated children' }],
   ['Philosophy & Ideas', { topic: 'philosophy' }],
-  ['Indian Literature', { search: 'Tagore Premchand' }],
   ['Adventure & Mystery', { topic: 'mystery' }],
   ['Science & Discovery', { topic: 'science' }],
+];
+
+const RESOURCE_LINKS = [
+  { name: 'Digital Library of India', type: 'Indian books', url: 'https://archive.org/details/digitallibraryindia', desc: 'Large public archive of scanned Indian books in many languages hosted by the Internet Archive.' },
+  { name: 'National Digital Library of India', type: 'Indian books', url: 'https://ndl.iitkgp.ac.in/', desc: 'India-focused discovery portal for books, papers, theses, videos, and learning collections.' },
+  { name: 'Project Gutenberg India shelf', type: 'Indian classics', url: 'https://www.gutenberg.org/ebooks/bookshelf/101', desc: 'Public-domain Indian literature and India-related classics available for free reading.' },
+  { name: 'Internet Archive India collections', type: 'Indian books', url: 'https://archive.org/details/opensource_indian_books', desc: 'Community-maintained open collections with downloadable Indian texts and scans.' },
+  { name: 'Wikisource India languages', type: 'Indian texts', url: 'https://wikisource.org/wiki/Main_Page', desc: 'Proofread public-domain texts in Hindi, Sanskrit, Bengali, Tamil, Telugu, Urdu, and more.' },
+  { name: 'Amar Chitra Katha on Archive.org', type: 'Comics', url: 'https://archive.org/search?query=Amar+Chitra+Katha', desc: 'Discover freely accessible comic scans where upload permissions and availability vary by item.' },
+  { name: 'Comic Book Plus', type: 'Public-domain comics', url: 'https://comicbookplus.com/', desc: 'Golden-age and public-domain comic books, strips, and illustrated magazines.' },
+  { name: 'Digital Comic Museum', type: 'Public-domain comics', url: 'https://digitalcomicmuseum.com/', desc: 'Free public-domain comic books, primarily golden-age titles.' },
 ];
 
 const PAGE_CHARS = 1250;
@@ -118,14 +131,14 @@ function pages(text) {
 
 function render() {
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  app.innerHTML = `<div class="app"><header class="topbar"><a class="brand" href="#" aria-label="GyanSetu home"><img class="brandLogo" src="src/assets/gyansetu-logo.svg" alt="GyanSetu logo"><div><b>GyanSetu</b><span>Digital Library</span></div></a><form class="search"><span>⌕</span><input id="q" placeholder="Search books, authors, subjects..."><button>Search</button></form><nav class="topActions"><button class="navBtn" id="historyBtn">History</button><button class="accountBtn" id="loginBtn">${currentUser ? `<span>${userInitials()}</span>${esc(currentUser.name)}` : 'Continue with Google'}</button><button class="iconBtn" id="theme" aria-label="Toggle theme">${dark ? '☀' : '☾'}</button></nav></header><main><section class="hero"><div class="heroText"><p class="eyebrow">✦ public-domain learning, professionally organized</p><h1>A refined online library for focused reading.</h1><p>Discover trusted classics, save your progress, and read in a dedicated mobile-friendly room with animated page turns, progress controls, and comfortable typography.</p><div class="heroActions"><button data-search="classic literature">Explore classics</button><button class="ghost" data-search="Indian literature Tagore Premchand">Indian literature</button></div></div><aside class="device"><div class="deviceTop">Today’s reading desk <span>Popular picks</span></div><div class="gridMini" id="featured"></div></aside></section><section class="historyPanel" id="history"><div><p class="eyebrow">Reading history</p><h2>Pick up where you left off</h2></div><div id="historyList"></div></section><div id="content"></div></main></div>`;
+  app.innerHTML = `<div class="app"><header class="topbar"><a class="brand" href="#" aria-label="GyanSetu home"><img class="brandLogo" src="src/assets/gyansetu-logo.svg" alt="GyanSetu logo"><div><b>GyanSetu</b><span>Digital Library</span></div></a><form class="search"><span>⌕</span><input id="q" placeholder="Search books, authors, subjects..."><button>Search</button></form><nav class="topActions"><button class="navBtn" id="historyBtn">History</button><button class="accountBtn" id="loginBtn">${currentUser ? `<span>${userInitials()}</span>${esc(currentUser.name)}` : 'Continue with Google'}</button><button class="iconBtn" id="theme" aria-label="Toggle theme">${dark ? '☀' : '☾'}</button></nav></header><main><section class="hero"><div class="heroText"><p class="eyebrow">✦ public-domain learning, professionally organized</p><h1>A refined online library for focused reading.</h1><p>Discover Indian public-domain books, global classics, and open comic collections, then read them in a dedicated mobile-first room that feels like turning the pages of a real book.</p><div class="heroActions"><button data-search="Indian literature Tagore Premchand">Indian books</button><button class="ghost" data-search="comic graphic illustrated children">Open comics</button></div></div><aside class="device"><div class="deviceTop">Today’s reading desk <span>Popular picks</span></div><div class="gridMini" id="featured"></div></aside></section><section class="historyPanel" id="history"><div><p class="eyebrow">Reading history</p><h2>Pick up where you left off</h2></div><div id="historyList"></div></section><section class="resources" id="resources"></section><div id="content"></div></main></div>`;
   $('#theme').onclick = () => { dark = !dark; render(); };
   $('#loginBtn').onclick = loginFlow;
   $('#historyBtn').onclick = () => $('#history').scrollIntoView({ behavior: 'smooth' });
   $('.search').onsubmit = (event) => { event.preventDefault(); showResults($('#q').value.trim() || 'classic literature'); };
   document.querySelectorAll('[data-search]').forEach((button) => { button.onclick = () => showResults(button.dataset.search); });
   app.onclick = (event) => { const cardButton = event.target.closest('[data-id]'); if (cardButton) openDetails(library.get(cardButton.dataset.id), Number(cardButton.dataset.page || 0)); };
-  renderHistory(); loadFeatured(); showShelves();
+  renderHistory(); renderResources(); loadFeatured(); showShelves();
 }
 
 function loginFlow() {
@@ -136,6 +149,12 @@ function loginFlow() {
   currentUser = { name: name.trim(), email: `${name.trim().toLowerCase().replace(/\s+/g, '.')}@google.user` };
   writeJson(USER_KEY, currentUser);
   render();
+}
+
+
+function renderResources() {
+  const box = $('#resources');
+  box.innerHTML = `<div class="sectionHead"><div><p class="eyebrow">Free & open collections</p><h2>Indian books and open comics</h2></div><a href="https://archive.org/" target="_blank" rel="noopener">Browse source archives →</a></div><div class="resourceGrid">${RESOURCE_LINKS.map((item) => `<a class="resourceCard" href="${item.url}" target="_blank" rel="noopener"><small>${esc(item.type)}</small><b>${esc(item.name)}</b><span>${esc(item.desc)}</span></a>`).join('')}</div>`;
 }
 
 function renderHistory() {
@@ -193,20 +212,24 @@ function openDetails(book, startPage = 0) {
 async function openReader(book, startPage = 0) {
   let page = Number(startPage) || 0;
   let bookPages = [];
-  document.body.insertAdjacentHTML('beforeend', `<section class="reader" role="dialog" aria-modal="true"><div class="readerShell"><div class="readerTop"><div><small>Reading room</small><b>${esc(book.title)}</b></div><button id="rclose" aria-label="Close reader">×</button></div><div class="readerTools"><button id="fontMinus">A−</button><input id="pageRange" type="range" min="1" value="1" max="1"><button id="fontPlus">A+</button></div><div class="bookStage"><button id="prev" aria-label="Previous page">‹</button><article class="page"><div class="loader">◌ Opening the book…</div></article><button id="next" aria-label="Next page">›</button></div></div></section>`);
+  document.body.insertAdjacentHTML('beforeend', `<section class="reader" role="dialog" aria-modal="true"><div class="readerShell"><div class="readerTop"><div><small>Book-style reading room</small><b>${esc(book.title)}</b></div><button id="rclose" aria-label="Close reader">×</button></div><div class="readerTools"><button id="fontMinus">A−</button><input id="pageRange" type="range" min="1" value="1" max="1"><button id="fontPlus">A+</button></div><div class="bookStage"><button id="prev" aria-label="Previous page">‹</button><article class="bookSpread"><div class="page leftPage"><div class="loader">◌ Opening the book…</div></div><div class="page rightPage"></div></article><button id="next" aria-label="Next page">›</button></div><div class="mobileTurnHint">Swipe or tap the page edges to turn pages</div></div></section>`);
   const reader = $('.reader');
   let size = 1;
   const close = () => { saveProgress(book, page, bookPages.length); reader?.remove(); if (activeReaderCleanup) window.removeEventListener('keydown', activeReaderCleanup); activeReaderCleanup = null; renderHistory(); };
-  const paint = () => { $('.page').innerHTML = `<p>${esc(bookPages[page])}</p><span>Page ${page + 1} of ${bookPages.length}</span>`; $('#pageRange').max = bookPages.length; $('#pageRange').value = page + 1; saveProgress(book, page, bookPages.length); };
-  const turn = (delta) => { const nextPage = Math.max(0, Math.min(bookPages.length - 1, page + delta)); if (nextPage === page) return; $('.page').classList.add(delta > 0 ? 'turnNext' : 'turnPrev'); setTimeout(() => { page = nextPage; paint(); $('.page').className = 'page'; }, 280); };
+  const paint = () => { const left = $('.leftPage'); const right = $('.rightPage'); left.innerHTML = `<p>${esc(bookPages[page] || '')}</p><span>Page ${page + 1} of ${bookPages.length}</span>`; right.innerHTML = `<p>${esc(bookPages[page + 1] || 'End of this reading section.')}</p><span>${page + 2 <= bookPages.length ? `Page ${page + 2} of ${bookPages.length}` : 'GyanSetu'}</span>`; $('#pageRange').max = bookPages.length; $('#pageRange').value = page + 1; saveProgress(book, page, bookPages.length); };
+  const turn = (delta) => { const step = window.matchMedia('(max-width: 760px)').matches ? 1 : 2; const nextPage = Math.max(0, Math.min(bookPages.length - 1, page + (delta * step))); if (nextPage === page) return; $('.bookSpread').classList.add(delta > 0 ? 'turnNext' : 'turnPrev'); setTimeout(() => { page = nextPage; paint(); $('.bookSpread').className = 'bookSpread'; }, 420); };
   $('#rclose').onclick = close; $('#next').onclick = () => turn(1); $('#prev').onclick = () => turn(-1);
-  $('#fontMinus').onclick = () => { size = Math.max(.85, size - .1); $('.page').style.setProperty('--reader-scale', size); };
-  $('#fontPlus').onclick = () => { size = Math.min(1.25, size + .1); $('.page').style.setProperty('--reader-scale', size); };
+  $('#fontMinus').onclick = () => { size = Math.max(.85, size - .1); document.querySelectorAll('.page').forEach((pageEl) => pageEl.style.setProperty('--reader-scale', size)); };
+  $('#fontPlus').onclick = () => { size = Math.min(1.25, size + .1); document.querySelectorAll('.page').forEach((pageEl) => pageEl.style.setProperty('--reader-scale', size)); };
   $('#pageRange').oninput = (event) => { page = Number(event.target.value) - 1; paint(); };
+  $('.bookSpread').onclick = (event) => { const bounds = event.currentTarget.getBoundingClientRect(); turn(event.clientX - bounds.left > bounds.width / 2 ? 1 : -1); };
+  let touchStart = 0;
+  $('.bookSpread').ontouchstart = (event) => { touchStart = event.changedTouches[0].clientX; };
+  $('.bookSpread').ontouchend = (event) => { const diff = event.changedTouches[0].clientX - touchStart; if (Math.abs(diff) > 35) turn(diff < 0 ? 1 : -1); };
   activeReaderCleanup = (event) => { if ($('.reader')) { if (event.key === 'Escape') close(); if (event.key === 'ArrowRight') turn(1); if (event.key === 'ArrowLeft') turn(-1); } };
   window.addEventListener('keydown', activeReaderCleanup);
   try { bookPages = pages(await textOf(book)); page = Math.max(0, Math.min(bookPages.length - 1, page)); paint(); }
-  catch (error) { $('.page').innerHTML = `<p>${esc(error.message)}</p>`; }
+  catch (error) { $('.leftPage').innerHTML = `<p>${esc(error.message)}</p>`; $('.rightPage').innerHTML = ''; }
 }
 
 render();
