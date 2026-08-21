@@ -1,0 +1,1 @@
+Mobile UI fixes are contained in src/mobile.css and index.html.
