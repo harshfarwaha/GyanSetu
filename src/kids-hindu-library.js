@@ -24,10 +24,10 @@
   ];
 
   const CHALISA = [
-    { title: 'Hanuman Chalisa', author: 'Goswami Tulsidas', tag: 'Hindi devotional text · Free PDF', pdf: 'https://www.nkbashram.org/wp-content/uploads/Hanuman+Chalisa.pdf', source: 'https://nkbashram.org/ashram-news-and-blog/live-chanting-sundays' },
-    { title: 'Hanuman Chalisa — official free text', author: 'Goswami Tulsidas', tag: 'Official/ashram resource', pdf: 'https://www.satyanandayoga.com.au/wp-content/uploads/2020/07/Sri-Hanuman-Chalisa.pdf', source: 'https://yogasverige.se/ladda-ner/' },
-    { title: 'Shiv Chalisa', author: 'Traditional devotional text', tag: 'Devotional text · source link', pdf: 'https://www.scribd.com/document/405683115/Shiv-Chalisa-pdf', source: 'https://www.scribd.com/document/405683115/Shiv-Chalisa-pdf' },
-    { title: 'Durga Chalisa', author: 'Traditional devotional text', tag: 'Devotional text · source link', pdf: 'https://www.scribd.com/document/342539416/Durga-Chalisa-pdf', source: 'https://www.scribd.com/document/342539416/Durga-Chalisa-pdf' }
+    { title: 'Hanuman Chalisa', author: 'Goswami Tulsidas', tag: 'Hindi devotional text · Public domain', pdf: 'https://www.wisdomlib.org/hans/chapter-1/chalisa-and-aartis', source: 'https://www.wisdomlib.org/hans/chapter-1/chalisa-and-aartis' },
+    { title: 'Hanuman Chalisa — English', author: 'Goswami Tulsidas · trans. P. R. R. Ramachandra', tag: 'English translation · Public domain', pdf: 'https://www.sanskritdocuments.org/hans/HanumanChalisaEnglish.pdf', source: 'https://www.sanskritdocuments.org/' },
+    { title: 'Shiv Chalisa', author: 'Traditional devotional text', tag: 'Hindi devotional text · Public domain', pdf: 'https://www.sanskritdocuments.org/shiva/ShivChalisaHindi.pdf', source: 'https://www.sanskritdocuments.org/' },
+    { title: 'Durga Chalisa', author: 'Traditional devotional text', tag: 'Hindi devotional text · Public domain', pdf: 'https://www.sanskritdocuments.org/durga/DurgaChalisaHindi.pdf', source: 'https://www.sanskritdocuments.org/' }
   ];
 
   const OSHO = [

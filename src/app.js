@@ -202,7 +202,7 @@ const RESOURCE_LINKS = [
 const HISTORY_KEY = 'gyansetu.readingHistory';
 const USER_KEY = 'gyansetu.googleUser';
 const USERS_KEY = 'gyansetu.accounts';
-const CACHE_KEY = 'gyansetu.bookCache.v3';
+const CACHE_KEY = 'gyansetu.bookCache.v4';
 // TODO: replace with your real OAuth Client ID from https://console.cloud.google.com/apis/credentials
 // to enable the "Continue with Google" button. Until then it shows a setup notice instead of failing silently.
 const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
@@ -497,6 +497,20 @@ function openPdfReader(book) {
   $('#rclose').onclick = close;
   activeReaderCleanup = (event) => { if (event.key === 'Escape') close(); };
   window.addEventListener('keydown', activeReaderCleanup);
+}
+
+// Clear stale cache versions from previous installs
+try {
+  Object.keys(localStorage)
+    .filter((k) => k.startsWith('gyansetu.bookCache.v'))
+    .forEach((k) => { if (k !== CACHE_KEY) localStorage.removeItem(k); });
+} catch {}
+
+// Register PWA service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
 }
 
 render();

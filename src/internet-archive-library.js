@@ -79,10 +79,12 @@
     const app = document.getElementById('app');
     if (!app) return;
 
-    // Internet Archive is a source inside the normal genre shelves, not a separate section.
+    // Internet Archive merging is DISABLED — GyanSetu's app.js explicitly
+    // excludes archive.org links to keep all links reliable and consistent.
+    // The API call and card renderer below are preserved for future use.
     document.getElementById('iaLibrarySection')?.remove();
     document.getElementById('internetArchiveBtn')?.remove();
-    mergeIntoShelves();
+    // mergeIntoShelves(); // disabled — archive.org links contradict GyanSetu policy
   }
 
   const observer = new MutationObserver(() => mount());

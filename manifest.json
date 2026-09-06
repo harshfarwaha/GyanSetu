@@ -1,0 +1,21 @@
+{
+  "name": "GyanSetu — Open Digital Library",
+  "short_name": "GyanSetu",
+  "description": "A free, legal digital library for classics, textbooks, poetry, and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07110f",
+  "theme_color": "#c8a45f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["books", "education", "reference"],
+  "lang": "en",
+  "scope": "/"
+}
